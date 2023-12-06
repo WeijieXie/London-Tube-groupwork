@@ -1,0 +1,11 @@
+[project]
+name = "londontube"
+version = "0.1.0"
+
+[build-system]
+requires = ["setuptools", "setuptools_scm[toml]>=6.2", "wheel"]
+
+[tool.setuptools.packages.find]
+include = ["londontube", "query"]
+exclude = ["tests", "docs"]
+
