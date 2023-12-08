@@ -1,31 +1,49 @@
 from londontube.network import Network
 
-def connectivity_of_line(line_index) -> Network:
-    """query the web service for information about a particular line, and contruct a Network object that represent this line.
+def connectivity_of_line(line_index):
+    """
+    Query the web service for information about a particular line, and contruct a Network object that represent this line.
 
-    :param line_index: index of the line
-    :type line_index: int
-    :return: Network of the line
-    :rtype: Network
+    Parameters
+    ----------
+    line_index : int
+        Index of the line.
+
+    Returns
+    -------
+    Network
+        Network of the line.
     """
     pass
 
 def disruption_info(date):
-    """retrive disruption info from web services
+    """
+    Retrieve disruption info from web services.
 
-    :param date: given day
-    :type date: str
-    :return: dictionary of disruption information
-    :rtype: dict()
+    Parameters
+    ----------
+    date : str
+        Given day.
+
+    Returns
+    -------
+    dict
+        Dictionary of disruption information.
     """
     pass
 
-def network_of_given_day(date) -> Network:
-    """retrieve the whole information of the given day and construct a Network object from this.
+def network_of_given_day(date):
+    """
+    Retrieve the whole information of the given day and construct a Network object from this.
 
-    :param date: given day
-    :type date: str
-    :return: Network representation of londontube
-    :rtype: Network
+    Parameters
+    ----------
+    date : str
+        Given day.
+
+    Returns
+    -------
+    Network
+        Network representation of londontube.
     """
     pass
