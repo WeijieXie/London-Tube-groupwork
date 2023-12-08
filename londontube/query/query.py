@@ -1,4 +1,4 @@
-
+from londontube.network import Network
 
 def connectivity_of_line(line_index) -> Network:
     """query the web service for information about a particular line, and contruct a Network object that represent this line.
