@@ -1,4 +1,5 @@
 from typing import List
+import numpy as np
 
 
 class Network:
@@ -10,7 +11,7 @@ class Network:
         Adjacency matrix of the network.
     """
 
-    def __init__(self, n_stations=0, list_of_edges=[],matrix=[[]]):
+    def __init__(self, *args):
         """
         Construct a Network object.
 
@@ -21,22 +22,19 @@ class Network:
         list_of_edges : list of tuples (int, int, int)
             List of edges between nodes, where each tuple is (v1, v2, weight).
         """
-        if matrix == [[]]:
-            adjacency_matrix = [
-                [0 for _ in range(n_stations)] for _ in range(n_stations)
-            ]
-            
-            for connection in list_of_edges:
-                adjacency_matrix[connection[0]][connection[1]] = connection[2]
-                adjacency_matrix[connection[1]][connection[0]] = connection[2]
-
+        if len(args) == 1:
+            self.matrix = args[0]
+        elif len(args) == 2:
+            n_stations = args[1]
+            list_of_edges = args[2]
+            adjacency_matrix = np.empty((n_stations, n_stations), dtype=int)
+            for n in range(n_stations):
+                adjacency_matrix[list_of_edges[0], list_of_edges[1]] = list_of_edges[2]
             self.matrix = adjacency_matrix
-        else:
-            self.matrix = matrix
-    
+
     @classmethod
     def from_adjacency_matrix(cls, matrix):
-        return cls(matrix=matrix)
+        return cls(matrix)
 
     @property
     def n_nodes(self) -> int:
@@ -62,8 +60,7 @@ class Network:
         """
         return self.matrix
 
-
-    def __add__(self, other) -> Network:
+    def __add__(self, other):
         """
         Support the "+" operation for Network, combining two networks.
 
@@ -77,51 +74,43 @@ class Network:
         Network
             Combined Network.
         """
-        if not isinstance(other, Network):
-            raise TypeError("The inputs should both be a network object ")
-        
-        if len(self.adjacency_matrix) != len(other.adjacency_matrix):
-            raise ValueError("the number of nodes in two networks aren't the same")
-        
-        new = [
-                [0 for _ in range(len(self.matrix))] for _ in range(len(self.matrix))
-            ]
-        
-        for i in range(len(self.matrix)):
-            for j in range(len(self.matrix)):
-                if self.matrix[i][j] == 0 and other.matrix[i][j] == 0:
-                    new[i][j] == 0
-                elif self.matrix[i][j] == 0:
-                    new[i][j] == other.matrix[i][j]
-                elif other.matrix[i][j] == 0:
-                    new[i][j] == self.matrix[i][j]
-                else:
-                    new[i][j] = min(self.matrix[i][j],other.matrix[i][j])
-        
-        return Network.from_adjacency_matrix(new)
+        array1 = self.matrix
+        array2 = other.matrix
 
-        # # Copy the current network's edges
-        # new_edges = self.list_of_edges.copy()
+        mask = (array1 != 0) & (
+            array2 != 0
+        )  # when there is an edge between, it is True
 
-        # for other_edge in other.list_of_edges:
-        #     # Check if they get same edge
-        #     same_edge = False
+        result1 = np.minimum(
+            array1, array2
+        )  # when there is an edge, set the time the shorter one
+        result2 = array1 + array2  # when there is no edge, set it the nozero one
 
-        #     for i, self_edge in enumerate(new_edges):
-        #         # Check if they get same edge in bi-directional condition
-        #         if (
-        #             self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]
-        #         ) or (self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]):
-        #             # Replace edge with smaller travel time if both have a same edge
-        #             if self_edge[2] > other_edge[2]:
-        #                 new_edges[i] = other_edge
-        #             same_edge = True
-        #             break
-        #     # If an other edge is a new edge then just append it to current edge list
-        #     if not same_edge:
-        #         new_edges.append(other_edge)
+        result = np.where(mask, result1, result2)
 
-        # return Network(self.n_nodes, new_edges)
+        return self.from_adjacency_matrix(result)
+
+    def add_delay(self, node1, node2):
+        """Adding delay to a specific edge between two nodes
+
+        Parameters
+        ----------
+        node1 : int
+            index of start node
+        node2 : int
+            index of destination node
+        """
+        pass
+
+    def remove_edges(self, node):
+        """Remove all edges connected to the given node
+
+        Parameters
+        ----------
+        node : int
+            index of a given node
+        """
+        pass
 
     def distant_neighbours(self, n, v) -> List[int]:
         """
