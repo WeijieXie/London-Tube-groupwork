@@ -4,3 +4,4 @@ build
 .idea
 londontube/__pycache__
 .vscode
+londontube/query/__pycache__

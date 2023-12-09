@@ -88,13 +88,21 @@ def network_of_given_day(date):
 
 
 def query_station_to_index(list_of_stations):
-    """query the web service to get the index of each of the stations
-
-    list_of_stations: List[str]: str is the name of station
-
-    return: List[int],List[str]: the index of the given stations and the name of the given stations
     """
+    Query the web service to get the index of each of the stations.
 
+    Parameters
+    ----------
+    list_of_stations : List[str]
+        A list of station names. Each element in the list is a string representing the name of a station.
+
+    Returns
+    -------
+    List[int]
+        A list of integers representing the indices of the given stations.
+    List[str]
+        A list of strings representing the names of the given stations.
+    """
     if list_of_stations == []:
         response = requests.get(
             "https://rse-with-python.arc.ucl.ac.uk/londontube-service/stations/query?id=all"
