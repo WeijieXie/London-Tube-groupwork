@@ -1,3 +1,6 @@
+from typing import List
+
+
 class Network:
     """Network class representing a network of stations and connections.
 
@@ -36,16 +39,31 @@ class Network:
         return self.n_stations
 
     @property
-    def adjacency_matrix(self) -> [[int]]:
+    def adjacency_matrix(self) -> List[List[int]]:
         """
         Generate and return the adjacency matrix of the network.
 
+        The adjacency matrix is a 2D list where each element represents
+        the connection between nodes in the network. The value at a
+        specific row and column indicates the weight of an edge between two nodes.
+
         Returns
         -------
-        list of list of int
-            Adjacency matrix of the network.
+        List[List[int]]
+            Adjacency matrix of the network. Each inner list represents
+            a row in the matrix, and each integer in the inner list
+            represents the edge weight between nodes.
         """
-        pass
+
+        adjacency_matrix = [
+            [0 for _ in range(self.n_nodes)] for _ in range(self.n_nodes)
+        ]
+
+        for connection in self.list_of_edges:
+            adjacency_matrix[connection[0]][connection[1]] = connection[2]
+            adjacency_matrix[connection[1]][connection[0]] = connection[2]
+
+        return adjacency_matrix
 
     def distant_neighbours(self, n, v) -> [int]:
         """
@@ -83,7 +101,7 @@ class Network:
         """
         pass
 
-    def __add__(self, other) -> 'Network':
+    def __add__(self, other) -> "Network":
         """
         Support the "+" operation for Network, combining two networks.
 
