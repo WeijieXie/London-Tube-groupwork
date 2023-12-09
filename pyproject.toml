@@ -8,6 +8,12 @@ journey-planner = "londontube.command:process"
 [build-system]
 requires = ["setuptools", "setuptools_scm[toml]>=6.2", "wheel"]
 
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.31"
+pandas = "^2.1.1"
+numpy = "^1.24.3"
+
 [tool.setuptools.packages.find]
 include = ["londontube", "query"]
 exclude = ["tests", "docs"]
