@@ -101,8 +101,8 @@ class Network:
             index of destination node
         """
         normal = self.matrix[node1, node2]
-        self.matrix[node1, node2] = 2 * normal
-        self.matrix[node2, node1] = 2 * normal
+        self.matrix[node1, node2] = delay * normal
+        self.matrix[node2, node1] = delay * normal
 
     def remove_edges(self, node):
         """Remove all edges connected to the given node
