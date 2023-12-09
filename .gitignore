@@ -2,3 +2,5 @@
 londontube.egg-info
 build
 .idea
+londontube/__pycache__
+.vscode/settings.json
