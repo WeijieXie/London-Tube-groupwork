@@ -39,7 +39,7 @@ class Network:
         return self.n_stations
 
     @property
-    def adjacency_matrix(self) -> [[int]]:
+    def adjacency_matrix(self) -> List[List[int]]:
         """
         Generate and return the adjacency matrix of the network.
 
@@ -48,7 +48,16 @@ class Network:
         list of list of int
             Adjacency matrix of the network.
         """
-        pass
+        adjacency_matrix = [
+            [0 for _ in range(self.n_stations)] for _ in range(self.n_stations)
+        ]
+        
+        for connection in self.list_of_edges:
+            adjacency_matrix[connection[0]][connection[1]] = connection[2]
+            adjacency_matrix[connection[1]][connection[0]] = connection[2]
+
+        return adjacency_matrix
+
 
     def __add__(self, other) -> "Network":
         """
@@ -90,7 +99,7 @@ class Network:
 
         return Network(self.n_nodes, new_edges)
 
-    def distant_neighbours(self, n, v) -> [int]:
+    def distant_neighbours(self, n, v) -> List[int]:
         """
         Find the n-distant neighbours of a particular node.
 
