@@ -39,32 +39,16 @@ class Network:
         return self.n_stations
 
     @property
-    def adjacency_matrix(self) -> List[List[int]]:
+    def adjacency_matrix(self) -> [[int]]:
         """
         Generate and return the adjacency matrix of the network.
 
-        The adjacency matrix is a 2D list where each element represents
-        the connection between nodes in the network. The value at a
-        specific row and column indicates the weight of an edge between two nodes.
-
         Returns
         -------
-        List[List[int]]
-            Adjacency matrix of the network. Each inner list represents
-            a row in the matrix, and each integer in the inner list
-            represents the edge weight between nodes.
+        list of list of int
+            Adjacency matrix of the network.
         """
-        STATIONS_TOTAL = 296
-
-        adjacency_matrix = [
-            [0 for _ in range(STATIONS_TOTAL)] for _ in range(STATIONS_TOTAL)
-        ]
-
-        for connection in self.list_of_edges:
-            adjacency_matrix[connection[0]][connection[1]] = connection[2]
-            adjacency_matrix[connection[1]][connection[0]] = connection[2]
-
-        return adjacency_matrix
+        pass
 
     def __add__(self, other) -> "Network":
         """
