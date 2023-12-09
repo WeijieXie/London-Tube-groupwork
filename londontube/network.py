@@ -43,26 +43,61 @@ class Network:
         """
         Generate and return the adjacency matrix of the network.
 
-        The adjacency matrix is a 2D list where each element represents
-        the connection between nodes in the network. The value at a
-        specific row and column indicates the weight of an edge between two nodes.
-
         Returns
         -------
-        List[List[int]]
-            Adjacency matrix of the network. Each inner list represents
-            a row in the matrix, and each integer in the inner list
-            represents the edge weight between nodes.
+        list of list of int
+            Adjacency matrix of the network.
         """
         adjacency_matrix = [
             [0 for _ in range(self.n_stations)] for _ in range(self.n_stations)
         ]
-
+        
         for connection in self.list_of_edges:
             adjacency_matrix[connection[0]][connection[1]] = connection[2]
             adjacency_matrix[connection[1]][connection[0]] = connection[2]
 
         return adjacency_matrix
+
+
+    def __add__(self, other) -> "Network":
+        """
+        Support the "+" operation for Network, combining two networks.
+
+        Parameters
+        ----------
+        other : Network
+            The Network to be added.
+
+        Returns
+        -------
+        Network
+            Combined Network.
+        """
+        if not isinstance(other, Network):
+            raise TypeError("The inputs should both be a network object ")
+
+        # Copy the current network's edges
+        new_edges = self.list_of_edges.copy()
+
+        for other_edge in other.list_of_edges:
+            # Check if they get same edge
+            same_edge = False
+
+            for i, self_edge in enumerate(new_edges):
+                # Check if they get same edge in bi-directional condition
+                if (
+                    self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]
+                ) or (self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]):
+                    # Replace edge with smaller travel time if both have a same edge
+                    if self_edge[2] > other_edge[2]:
+                        new_edges[i] = other_edge
+                    same_edge = True
+                    break
+            # If an other edge is a new edge then just append it to current edge list
+            if not same_edge:
+                new_edges.append(other_edge)
+
+        return Network(self.n_nodes, new_edges)
 
     def distant_neighbours(self, n, v) -> List[int]:
         """
@@ -97,21 +132,5 @@ class Network:
         -------
         list of int
             List of indexes of nodes forming the shortest path.
-        """
-        pass
-
-    def __add__(self, other) -> "Network":
-        """
-        Support the "+" operation for Network, combining two networks.
-
-        Parameters
-        ----------
-        other : Network
-            The Network to be added.
-
-        Returns
-        -------
-        Network
-            Combined Network.
         """
         pass
