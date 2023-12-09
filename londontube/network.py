@@ -33,7 +33,7 @@ class Network:
         int
             Number of nodes in the network.
         """
-        pass
+        return self.n_stations
 
     @property
     def adjacency_matrix(self) -> [[int]]:
