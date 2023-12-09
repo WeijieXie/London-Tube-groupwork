@@ -19,6 +19,10 @@ def connectivity_of_line(line_index):
     Network
         Network of a line.
     """
+    query_total_info = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
+    response = requests.get(query_total_info)
+    total_info = response.json()
+    
     query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/line/query?line_identifier={line_index}"
     response = requests.get(query_web).content.decode("utf-8")
     # Store line csv information
@@ -26,17 +30,14 @@ def connectivity_of_line(line_index):
     # List to store edges
     list_of_edges = []
     # Set to get station indices
-    stations = set()
 
     for each_connectity in connectivity_info:
         if each_connectity:
             # Store each row's information
             station1, station2, travel_time = map(int, each_connectity)
             list_of_edges.append((station1, station2, travel_time))
-            stations.add(station1)
-            stations.add(station2)
-    n_stations = len(stations)
-    line_network = Network(n_stations, list_of_edges)
+
+    line_network = Network(int(total_info["n_stations"]), list_of_edges)
     return line_network
 
 
