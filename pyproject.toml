@@ -2,6 +2,9 @@
 name = "londontube"
 version = "0.1.0"
 
+[project.scripts]
+journey-planner = "londontube.command:process"
+
 [build-system]
 requires = ["setuptools", "setuptools_scm[toml]>=6.2", "wheel"]
 
