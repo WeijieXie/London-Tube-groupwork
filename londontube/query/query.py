@@ -70,6 +70,22 @@ def disruption_info(date=None):
 
     return disruption_info
 
+def network_of_given_day(date):
+    """
+    Retrieve the whole information of the given day and construct a Network object from this.
+
+    Parameters
+    ----------
+    date : str
+        Given day.
+
+    Returns
+    -------
+    Network
+        Network representation of londontube.
+    """
+    pass
+
 
 def query_station_to_index(list_of_stations):
     """query the web service to get the index of each of the stations
