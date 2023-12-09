@@ -54,10 +54,8 @@ class Network:
             a row in the matrix, and each integer in the inner list
             represents the edge weight between nodes.
         """
-        STATIONS_TOTAL = 296
-
         adjacency_matrix = [
-            [0 for _ in range(STATIONS_TOTAL)] for _ in range(STATIONS_TOTAL)
+            [0 for _ in range(self.n_stations)] for _ in range(self.n_stations)
         ]
 
         for connection in self.list_of_edges:
@@ -66,7 +64,7 @@ class Network:
 
         return adjacency_matrix
 
-    def distant_neighbours(self, n, v) -> [int]:
+    def distant_neighbours(self, n, v) -> List[int]:
         """
         Find the n-distant neighbours of a particular node.
 
