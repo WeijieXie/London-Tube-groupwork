@@ -41,21 +41,33 @@ def connectivity_of_line(line_index):
     return line_network
 
 
-def disruption_info(date):
+
+def disruption_info(date=None):
     """
     Retrieve disruption info from web services.
 
     Parameters
     ----------
     date : str
-        Given day.
+        The date of disruption, by default None
 
     Returns
     -------
-    dict
-        Dictionary of disruption information.
+    List
+        A list of dictionary contains disruption information
     """
-    pass
+
+    # Return today's disruption information if not date provided
+    if date == None:
+        query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query"
+    else:
+        query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query?date={date}"
+
+    response = requests.get(query_web)
+    disruption_info = response.json()
+
+    return disruption_info
+
 
 
 def network_of_given_day(date):
