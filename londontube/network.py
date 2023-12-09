@@ -54,9 +54,10 @@ class Network:
             a row in the matrix, and each integer in the inner list
             represents the edge weight between nodes.
         """
+        STATIONS_TOTAL = 296
 
         adjacency_matrix = [
-            [0 for _ in range(self.n_nodes)] for _ in range(self.n_nodes)
+            [0 for _ in range(STATIONS_TOTAL)] for _ in range(STATIONS_TOTAL)
         ]
 
         for connection in self.list_of_edges:
