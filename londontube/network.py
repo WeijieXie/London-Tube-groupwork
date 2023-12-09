@@ -66,6 +66,46 @@ class Network:
 
         return adjacency_matrix
 
+    def __add__(self, other) -> "Network":
+        """
+        Support the "+" operation for Network, combining two networks.
+
+        Parameters
+        ----------
+        other : Network
+            The Network to be added.
+
+        Returns
+        -------
+        Network
+            Combined Network.
+        """
+        if not isinstance(other, Network):
+            raise TypeError("The inputs should both be a network object ")
+
+        # Copy the current network's edges
+        new_edges = self.list_of_edges.copy()
+
+        for other_edge in other.list_of_edges:
+            # Check if they get same edge
+            same_edge = False
+
+            for i, self_edge in enumerate(new_edges):
+                # Check if they get same edge in bi-directional condition
+                if (
+                    self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]
+                ) or (self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]):
+                    # Replace edge with smaller travel time if both have a same edge
+                    if self_edge[2] > other_edge[2]:
+                        new_edges[i] = other_edge
+                    same_edge = True
+                    break
+            # If an other edge is a new edge then just append it to current edge list
+            if not same_edge:
+                new_edges.append(other_edge)
+
+        return Network(self.n_nodes, new_edges)
+
     def distant_neighbours(self, n, v) -> [int]:
         """
         Find the n-distant neighbours of a particular node.
@@ -99,21 +139,5 @@ class Network:
         -------
         list of int
             List of indexes of nodes forming the shortest path.
-        """
-        pass
-
-    def __add__(self, other) -> "Network":
-        """
-        Support the "+" operation for Network, combining two networks.
-
-        Parameters
-        ----------
-        other : Network
-            The Network to be added.
-
-        Returns
-        -------
-        Network
-            Combined Network.
         """
         pass
