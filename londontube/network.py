@@ -90,7 +90,7 @@ class Network:
 
         return self.from_adjacency_matrix(result)
 
-    def add_delay(self, node1, node2):
+    def add_delay(self, node1, node2, delay):
         """Adding delay to a specific edge between two nodes
 
         Parameters
@@ -100,7 +100,9 @@ class Network:
         node2 : int
             index of destination node
         """
-        pass
+        normal = self.matrix[node1, node2]
+        self.matrix[node1, node2] = delay * normal
+        self.matrix[node2, node1] = delay * normal
 
     def remove_edges(self, node):
         """Remove all edges connected to the given node
@@ -110,7 +112,9 @@ class Network:
         node : int
             index of a given node
         """
-        pass
+        self.matrix[node, 0 : node + 1] = np.zeros(node + 1)
+        self.matrix[0 : node + 1, node] = np.zeros(node + 1)
+
 
     def distant_neighbours(self, n, v) -> List[int]:
         """
