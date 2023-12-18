@@ -133,7 +133,7 @@ class Network:
             List of indexes of nodes that are n-distant neighbours.
         """
         #Breadth-first search for nth order neighbours:
-        dim = len(adjacency_matrix)
+        dim = len(self.matrix)
         visited = [False for i in range(dim)]
         queue = [v]
         distance = [float('inf') for i in range(dim)]
