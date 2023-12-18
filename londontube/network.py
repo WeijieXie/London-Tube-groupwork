@@ -1,5 +1,6 @@
 from typing import List
 import numpy as np
+from queue import Queue
 
 
 class Network:
@@ -25,11 +26,12 @@ class Network:
         if len(args) == 1:
             self.matrix = args[0]
         elif len(args) == 2:
-            n_stations = args[1]
-            list_of_edges = args[2]
-            adjacency_matrix = np.empty((n_stations, n_stations), dtype=int)
-            for n in range(n_stations):
-                adjacency_matrix[list_of_edges[0], list_of_edges[1]] = list_of_edges[2]
+            n_stations = args[0]
+            list_of_edges = args[1]
+            adjacency_matrix = np.zeros((n_stations, n_stations), dtype=int)
+            for edge in list_of_edges:
+                adjacency_matrix[edge[0], edge[1]] = edge[2]
+                adjacency_matrix[edge[1], edge[0]] = edge[2]
             self.matrix = adjacency_matrix
 
     @classmethod
@@ -132,7 +134,23 @@ class Network:
         list of int
             List of indexes of nodes that are n-distant neighbours.
         """
-        pass
+        visited = [0 for _ in range(self.matrix.shape[0])]
+        visited[v] = 1
+        visiting_queue = Queue()
+        visiting_queue.put((v,0))
+        neighbours = []
+        while not visiting_queue.empty():
+            current_node, depth = visiting_queue.get()
+            if depth > n:
+                return neighbours
+            if depth > 0:
+                neighbours.append(current_node)
+            for i in range(self.matrix.shape[0]):
+                if self.matrix[current_node, i] != 0 and not visited[i]:
+                    visited[i] = 1
+                    visiting_queue.put((i,depth+1))
+        return neighbours
+            
 
     def dijkstra(self, start_node, dest_node) -> [int]:
         """
