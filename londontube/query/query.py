@@ -70,6 +70,43 @@ def disruption_info(date=None):
 
     return disruption_info
 
+
+def get_entire_network():
+    """
+    Combine each sub network of each line to a full London network which can change 
+    based on disruption information
+
+    Returns
+    -------
+    Network
+        An entire underground network of London
+    """
+    
+    # Query the information of the network
+    query_total_info = (
+        f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
+    )
+    response = requests.get(query_total_info)
+    total_info = response.json()
+    
+    # The number of lines
+    n_lines = int(total_info['n_lines'])
+    
+    sub_networks = dict()
+    
+    for line_id in range(n_lines):
+        line_network = connectivity_of_line(line_id)
+        sub_networks[line_id] = line_network
+    
+    entire_network = sub_networks[0]
+    
+    for i, sub_network in enumerate(sub_networks.values()):
+        if i != 0:
+            entire_network = entire_network + sub_network
+    
+    return entire_network
+
+
 def network_of_given_day(date):
     """
     Retrieve the whole information of the given day and construct a Network object from this.
