@@ -1,5 +1,6 @@
 from typing import List
 import numpy as np
+import math
 
 
 class Network:
@@ -25,11 +26,12 @@ class Network:
         if len(args) == 1:
             self.matrix = args[0]
         elif len(args) == 2:
-            n_stations = args[1]
-            list_of_edges = args[2]
-            adjacency_matrix = np.empty((n_stations, n_stations), dtype=int)
-            for n in range(n_stations):
-                adjacency_matrix[list_of_edges[0], list_of_edges[1]] = list_of_edges[2]
+            n_stations = args[0]
+            list_of_edges = args[1]
+            adjacency_matrix = np.zeros((n_stations, n_stations), dtype=int)
+            for edge in list_of_edges:
+                adjacency_matrix[edge[0], edge[1]] = edge[2]
+                adjacency_matrix[edge[1], edge[0]] = edge[2]
             self.matrix = adjacency_matrix
 
     @classmethod
@@ -150,4 +152,34 @@ class Network:
         list of int
             List of indexes of nodes forming the shortest path.
         """
-        pass
+        visited = [False for _ in range(self.matrix.shape[0])]
+        tentative_costs = [math.inf for _ in range(self.matrix.shape[0])]
+        tentative_costs[start_node] = 0
+        previous = [start_node for _ in range(self.matrix.shape[0])]
+        while not all(visited):
+            current = None
+            minimum = math.inf
+            for i in range(len(visited)):
+                if not visited[i] and tentative_costs[i] <= minimum:
+                    minimum = tentative_costs[i]
+                    current = i
+            visited[current] = True
+            for i in range(self.matrix.shape[0]):
+                if self.matrix[current, i] != 0 and not visited[i]:
+                    proposed_cost = tentative_costs[current] + self.matrix[current, i]
+                    if tentative_costs[i] > proposed_cost:
+                        tentative_costs[i] = proposed_cost
+                        previous[i] = current
+
+        return self.reconstruct_path(previous, start_node, dest_node)
+
+    def reconstruct_path(self, previous, start_node, dest_node):
+        path = []
+        current = dest_node
+        while True:
+            path.append(current)
+            current = previous[current]
+            if current == start_node:
+                path.append(start_node)
+                return path[::-1]
+
