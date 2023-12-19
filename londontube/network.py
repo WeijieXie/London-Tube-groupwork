@@ -1,6 +1,8 @@
 from typing import List
 import numpy as np
+import math
 from queue import Queue
+
 
 
 class Network:
@@ -168,4 +170,34 @@ class Network:
         list of int
             List of indexes of nodes forming the shortest path.
         """
-        pass
+        visited = [False for _ in range(self.matrix.shape[0])]
+        tentative_costs = [math.inf for _ in range(self.matrix.shape[0])]
+        tentative_costs[start_node] = 0
+        previous = [start_node for _ in range(self.matrix.shape[0])]
+        while not all(visited):
+            current = None
+            minimum = math.inf
+            for i in range(len(visited)):
+                if not visited[i] and tentative_costs[i] <= minimum:
+                    minimum = tentative_costs[i]
+                    current = i
+            visited[current] = True
+            for i in range(self.matrix.shape[0]):
+                if self.matrix[current, i] != 0 and not visited[i]:
+                    proposed_cost = tentative_costs[current] + self.matrix[current, i]
+                    if tentative_costs[i] > proposed_cost:
+                        tentative_costs[i] = proposed_cost
+                        previous[i] = current
+
+        return self.reconstruct_path(previous, start_node, dest_node)
+
+    def reconstruct_path(self, previous, start_node, dest_node):
+        path = []
+        current = dest_node
+        while True:
+            path.append(current)
+            current = previous[current]
+            if current == start_node:
+                path.append(start_node)
+                return path[::-1]
+
