@@ -4,41 +4,32 @@ import math
 from queue import Queue
 
 
-
 class Network:
-    """Network class representing a network of stations and connections.
+    """
+    Network class representing a network of stations and connections.
 
     Attributes
     ----------
     matrix : List[List[int]]
         Adjacency matrix of the network.
+
+    edge: List[tuple()]
+        Each edge information in a network is stored as a tuple in a list.
+        The content of a tuple is (v1, v2, w, id) where v1 and v2 are two stations,
+        w is the weight(travel time) between them and id is what line this edge belongs to.
     """
 
-    def __init__(self, *args):
-        """
-        Construct a Network object.
-
-        Parameters
-        ----------
-        n_stations : int
-            Number of stations.
-        list_of_edges : list of tuples (int, int, int)
-            List of edges between nodes, where each tuple is (v1, v2, weight).
-        """
-        if len(args) == 1:
-            self.matrix = args[0]
-        elif len(args) == 2:
-            n_stations = args[0]
-            list_of_edges = args[1]
-            adjacency_matrix = np.zeros((n_stations, n_stations), dtype=int)
-            for edge in list_of_edges:
-                adjacency_matrix[edge[0], edge[1]] = edge[2]
-                adjacency_matrix[edge[1], edge[0]] = edge[2]
-            self.matrix = adjacency_matrix
-
-    @classmethod
-    def from_adjacency_matrix(cls, matrix):
-        return cls(matrix)
+    def __init__(self, n_stations, list_of_edges):
+        # The adjacency matrix
+        self.matrix = np.zeros((n_stations, n_stations), dtype=int)
+        # List of edges
+        self.edges = []
+        for edge in list_of_edges:
+            self.edges.append(
+                edge[0], edge[1], edge[2], edge[3]
+            )  # edge[3] is the identifier of a line
+            self.matrix[edge[0], edge[1]] = edge[2]
+            self.matrix[edge[1], edge[0]] = edge[2]
 
     @property
     def n_nodes(self) -> int:
@@ -78,21 +69,34 @@ class Network:
         Network
             Combined Network.
         """
-        array1 = self.matrix
-        array2 = other.matrix
 
-        mask = (array1 != 0) & (
-            array2 != 0
-        )  # when there is an edge between, it is True
+        # Combined network
+        integrated_network = Network()
+        integrated_network.edges = self.edges.copy()
 
-        result1 = np.minimum(
-            array1, array2
-        )  # when there is an edge, set the time the shorter one
-        result2 = array1 + array2  # when there is no edge, set it the nozero one
+        for other_edge in other.edges:
+            same_found = False
+            for i, self_edge in enumerate(integrated_network.edges):
+                # The graph is bidirectional.
+                # Check for two conditions where the same edge appears.
+                if (self_edge[0], self_edge[1]) == (other_edge[0], other_edge[1]) or (
+                    self_edge[0],
+                    self_edge[1],
+                ) == (other_edge[1], other_edge[0]):
+                    if self_edge[2] > other_edge[2]:
+                        integrated_network.edges[i] = other_edge
+                    same_found = True
+                    break
+            if not same_found:
+                integrated_network.edges.append(other_edge)
 
-        result = np.where(mask, result1, result2)
+        integrated_network.matrix = np.where(
+            (self.matrix != 0) & (other.matrix != 0),
+            np.minimum(self.matrix, other.matrix),
+            self.matrix + other.matrix,
+        )
 
-        return self.from_adjacency_matrix(result)
+        return integrated_network
 
     def add_delay(self, node1, node2, delay):
         """Adding delay to a specific edge between two nodes
@@ -119,7 +123,6 @@ class Network:
         self.matrix[node, 0 : node + 1] = np.zeros(node + 1)
         self.matrix[0 : node + 1, node] = np.zeros(node + 1)
 
-
     def distant_neighbours(self, n, v) -> List[int]:
         """
         Find the n-distant neighbours of a particular node.
@@ -139,7 +142,7 @@ class Network:
         visited = [0 for _ in range(self.matrix.shape[0])]
         visited[v] = 1
         visiting_queue = Queue()
-        visiting_queue.put((v,0))
+        visiting_queue.put((v, 0))
         neighbours = []
         while not visiting_queue.empty():
             current_node, depth = visiting_queue.get()
@@ -150,9 +153,8 @@ class Network:
             for i in range(self.matrix.shape[0]):
                 if self.matrix[current_node, i] != 0 and not visited[i]:
                     visited[i] = 1
-                    visiting_queue.put((i,depth+1))
+                    visiting_queue.put((i, depth + 1))
         return neighbours
-            
 
     def dijkstra(self, start_node, dest_node) -> [int]:
         """
@@ -200,4 +202,3 @@ class Network:
             if current == start_node:
                 path.append(start_node)
                 return path[::-1]
-
