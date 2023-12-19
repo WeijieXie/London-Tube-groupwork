@@ -1,4 +1,8 @@
 from typing import List
+import numpy as np
+import math
+from queue import Queue
+
 
 
 class Network:
@@ -6,13 +10,11 @@ class Network:
 
     Attributes
     ----------
-    n_stations : int
-        Number of nodes in the network.
-    list_of_edges : list of tuples
-        List of edges in the network, where each edge consists of two indexes of nodes and a weight between nodes.
+    matrix : List[List[int]]
+        Adjacency matrix of the network.
     """
 
-    def __init__(self, n_stations, list_of_edges):
+    def __init__(self, *args):
         """
         Construct a Network object.
 
@@ -23,8 +25,20 @@ class Network:
         list_of_edges : list of tuples (int, int, int)
             List of edges between nodes, where each tuple is (v1, v2, weight).
         """
-        self.n_stations = n_stations
-        self.list_of_edges = list_of_edges
+        if len(args) == 1:
+            self.matrix = args[0]
+        elif len(args) == 2:
+            n_stations = args[0]
+            list_of_edges = args[1]
+            adjacency_matrix = np.zeros((n_stations, n_stations), dtype=int)
+            for edge in list_of_edges:
+                adjacency_matrix[edge[0], edge[1]] = edge[2]
+                adjacency_matrix[edge[1], edge[0]] = edge[2]
+            self.matrix = adjacency_matrix
+
+    @classmethod
+    def from_adjacency_matrix(cls, matrix):
+        return cls(matrix)
 
     @property
     def n_nodes(self) -> int:
@@ -36,7 +50,7 @@ class Network:
         int
             Number of nodes in the network.
         """
-        return self.n_stations
+        return len(self.matrix)
 
     @property
     def adjacency_matrix(self) -> List[List[int]]:
@@ -48,18 +62,9 @@ class Network:
         list of list of int
             Adjacency matrix of the network.
         """
-        adjacency_matrix = [
-            [0 for _ in range(self.n_stations)] for _ in range(self.n_stations)
-        ]
-        
-        for connection in self.list_of_edges:
-            adjacency_matrix[connection[0]][connection[1]] = connection[2]
-            adjacency_matrix[connection[1]][connection[0]] = connection[2]
+        return self.matrix
 
-        return adjacency_matrix
-
-
-    def __add__(self, other) -> "Network":
+    def __add__(self, other):
         """
         Support the "+" operation for Network, combining two networks.
 
@@ -73,31 +78,47 @@ class Network:
         Network
             Combined Network.
         """
-        if not isinstance(other, Network):
-            raise TypeError("The inputs should both be a network object ")
+        array1 = self.matrix
+        array2 = other.matrix
 
-        # Copy the current network's edges
-        new_edges = self.list_of_edges.copy()
+        mask = (array1 != 0) & (
+            array2 != 0
+        )  # when there is an edge between, it is True
 
-        for other_edge in other.list_of_edges:
-            # Check if they get same edge
-            same_edge = False
+        result1 = np.minimum(
+            array1, array2
+        )  # when there is an edge, set the time the shorter one
+        result2 = array1 + array2  # when there is no edge, set it the nozero one
 
-            for i, self_edge in enumerate(new_edges):
-                # Check if they get same edge in bi-directional condition
-                if (
-                    self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]
-                ) or (self_edge[0] == other_edge[0] and self_edge[1] == other_edge[1]):
-                    # Replace edge with smaller travel time if both have a same edge
-                    if self_edge[2] > other_edge[2]:
-                        new_edges[i] = other_edge
-                    same_edge = True
-                    break
-            # If an other edge is a new edge then just append it to current edge list
-            if not same_edge:
-                new_edges.append(other_edge)
+        result = np.where(mask, result1, result2)
 
-        return Network(self.n_nodes, new_edges)
+        return self.from_adjacency_matrix(result)
+
+    def add_delay(self, node1, node2, delay):
+        """Adding delay to a specific edge between two nodes
+
+        Parameters
+        ----------
+        node1 : int
+            index of start node
+        node2 : int
+            index of destination node
+        """
+        normal = self.matrix[node1, node2]
+        self.matrix[node1, node2] = delay * normal
+        self.matrix[node2, node1] = delay * normal
+
+    def remove_edges(self, node):
+        """Remove all edges connected to the given node
+
+        Parameters
+        ----------
+        node : int
+            index of a given node
+        """
+        self.matrix[node, 0 : node + 1] = np.zeros(node + 1)
+        self.matrix[0 : node + 1, node] = np.zeros(node + 1)
+
 
     def distant_neighbours(self, n, v) -> List[int]:
         """
@@ -115,7 +136,24 @@ class Network:
         list of int
             List of indexes of nodes that are n-distant neighbours.
         """
-        pass
+        dim = self.matrix.shape[0]
+        visited = [0 for _ in range(dim)]
+        visited[v] = 1
+        visiting_queue = Queue()
+        visiting_queue.put((v, 0))
+        neighbours = []
+        while not visiting_queue.empty():
+            current_node, depth = visiting_queue.get()
+            if depth > n:
+                return neighbours
+            if depth > 0:
+                neighbours.append(current_node)
+            for i in range(dim):
+                if self.matrix[current_node, i] != 0 and not visited[i]:
+                    visited[i] = 1
+                    visiting_queue.put((i, depth + 1))
+        return neighbours
+            
 
     def dijkstra(self, start_node, dest_node) -> [int]:
         """
@@ -133,4 +171,34 @@ class Network:
         list of int
             List of indexes of nodes forming the shortest path.
         """
-        pass
+        visited = [False for _ in range(self.matrix.shape[0])]
+        tentative_costs = [math.inf for _ in range(self.matrix.shape[0])]
+        tentative_costs[start_node] = 0
+        previous = [start_node for _ in range(self.matrix.shape[0])]
+        while not all(visited):
+            current = None
+            minimum = math.inf
+            for i in range(len(visited)):
+                if not visited[i] and tentative_costs[i] <= minimum:
+                    minimum = tentative_costs[i]
+                    current = i
+            visited[current] = True
+            for i in range(self.matrix.shape[0]):
+                if self.matrix[current, i] != 0 and not visited[i]:
+                    proposed_cost = tentative_costs[current] + self.matrix[current, i]
+                    if tentative_costs[i] > proposed_cost:
+                        tentative_costs[i] = proposed_cost
+                        previous[i] = current
+
+        return self.reconstruct_path(previous, start_node, dest_node)
+
+    def reconstruct_path(self, previous, start_node, dest_node):
+        path = []
+        current = dest_node
+        while True:
+            path.append(current)
+            current = previous[current]
+            if current == start_node:
+                path.append(start_node)
+                return path[::-1]
+
