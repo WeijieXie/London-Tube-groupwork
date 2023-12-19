@@ -70,9 +70,27 @@ def disruption_info(date=None):
 
     return disruption_info
 
+
+
+def apply_disruptions(network, disruptions):
+    """
+    This function is used to apply disruptions to the entired network gained 
+    from get_entire_network() function
+
+    Parameters
+    ----------
+    network : Network
+        The network here is the entire network combined by each line of sub networks
+    disruptions : dictionary
+        The disruption information
+    """
+    
+    pass
+
 def network_of_given_day(date):
     """
-    Retrieve the whole information of the given day and construct a Network object from this.
+    Retrieve the whole information of the given day and construct a Network object based on the 
+    disruption information.
 
     Parameters
     ----------
@@ -84,7 +102,12 @@ def network_of_given_day(date):
     Network
         Network representation of londontube.
     """
-    pass
+    
+    entire_network = get_entire_network()
+    disruptions = disruption_info(date)
+    changed_network = apply_disruptions(entire_network, disruptions)
+    
+    return changed_network
 
 
 def query_station_to_index(list_of_stations):
