@@ -144,7 +144,7 @@ def network_of_given_day(date):
     return changed_network
 
 
-def query_station_to_index(list_of_stations):
+def query_station_info(list_of_stations):
     """
     Query the web service to get the index of each of the stations.
 
@@ -172,6 +172,4 @@ def query_station_to_index(list_of_stations):
         )
         response = requests.get(requests_str)
     df = pd.read_csv(StringIO(response.text))
-    return df["station index"].tolist(), df["station name"].tolist()
-
-
+    return df["station index"].tolist(), df["station name"].tolist(), df["latitude"].tolist(), df["longitude"].tolist()
