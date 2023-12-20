@@ -107,17 +107,13 @@ def get_entire_network():
     # The number of lines
     n_lines = int(total_info['n_lines'])
     
-    sub_networks = dict()
-    
-    for line_id in range(n_lines):
-        line_network = connectivity_of_line(line_id)
-        sub_networks[line_id] = line_network
-    
-    entire_network = sub_networks[0]
-    
-    for i, sub_network in enumerate(sub_networks.values()):
-        if i != 0:
-            entire_network = entire_network + sub_network
+    # Set the first line's network as the entire one
+    entire_network = connectivity_of_line(0)
+
+    # Combine the network of each subsequent line
+    for line_idx in range(1, n_lines):
+        line_network = connectivity_of_line(line_idx)
+        entire_network = entire_network + line_network
     
     return entire_network
 
