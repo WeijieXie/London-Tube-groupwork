@@ -139,23 +139,23 @@ class Network:
         list of int
             List of indexes of nodes that are n-distant neighbours.
         """
-        dim = self.matrix.shape[0]
-        visited = [0 for _ in range(dim)]
-        visited[v] = 1
-        visiting_queue = Queue()
-        visiting_queue.put((v, 0))
-        neighbours = []
-        while not visiting_queue.empty():
-            current_node, depth = visiting_queue.get()
-            if depth > n:
-                return neighbours
-            if depth > 0:
-                neighbours.append(current_node)
+
+        # Breadth-first search for nth order neighbours:
+        dim = len(self.matrix)
+        visited = [False for i in range(dim)]
+        queue = [v]
+        distance = [float('inf') for i in range(dim)]
+
+        visited[v] = True
+        distance[v] = 0
+        while queue:
+            node = queue.pop(0)
             for i in range(dim):
-                if self.matrix[current_node, i] != 0 and not visited[i]:
-                    visited[i] = 1
-                    visiting_queue.put((i, depth + 1))
-        return neighbours
+                if not visited[i] and adjacency_matrix[node][i] > 0:
+                    visited[i] = True
+                    distance[i] = distance[node] + 1
+                    queue.append(i)
+        return [j for j, x in enumerate(distance) if 0 < x <= n]
 
     def dijkstra(self, start_node, dest_node) -> [int]:
         """
