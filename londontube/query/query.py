@@ -38,7 +38,7 @@ def connectivity_of_line(line_index):
         if each_connectity:
             # Store each row's information
             station1, station2, travel_time = map(int, each_connectity)
-            list_of_edges.append((station1, station2, travel_time))
+            list_of_edges.append((station1, station2, travel_time, line_index))
 
     line_network = Network(int(total_info["n_stations"]), list_of_edges)
     return line_network
