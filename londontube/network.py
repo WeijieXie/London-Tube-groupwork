@@ -71,8 +71,9 @@ class Network:
         """
 
         # Combined network
-        integrated_network = Network()
-        integrated_network.edges = self.edges.copy()
+        
+        integrated_network_edges = self.edges.copy()
+        integrated_network = Network(self.n_nodes, integrated_network_edges)
 
         for other_edge in other.edges:
             same_found = False
