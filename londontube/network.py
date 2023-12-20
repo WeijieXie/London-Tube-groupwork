@@ -98,30 +98,139 @@ class Network:
 
         return integrated_network
 
-    def add_delay(self, node1, node2, delay):
-        """Adding delay to a specific edge between two nodes
+    # The first disruption type
+    def delay_to_specific_line_one_station(
+        self, line_idx, station_idx, delay_multiplier
+    ):
+        """
+        It is one type of disruptions that one station in a line is delayed.
+        Thus, all stations that connected to this station in the line are delayed.
 
         Parameters
         ----------
-        node1 : int
-            index of start node
-        node2 : int
-            index of destination node
+        line_idx : int
+            The index here is the number that represents the delayed line
+        station_idx : int
+            The index of one affected station
+        delay_multiplier : int
+            The travel time(weight) is multiplied by this factor
         """
-        normal = self.matrix[node1, node2]
-        self.matrix[node1, node2] = delay * normal
-        self.matrix[node2, node1] = delay * normal
 
-    def remove_edges(self, node):
-        """Remove all edges connected to the given node
+        for i, edge in enumerate(self.edges):
+            # Check which edge in the network correspond to this line and the affected statioin
+            if edge[3] == line_idx and (
+                edge[0] == station_idx or edge[1] == station_idx
+            ):
+                updated_weight = int(edge[2] * delay_multiplier)
+                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
+                self.matrix[edge[0], edge[1]] = updated_weight
+                self.matrix[edge[1], edge[0]] = updated_weight
+
+    # The second disruption type
+    def delay_to_specific_line_between_stations(
+        self, line_idx, station1_idx, station2_idx, delay_multiplier
+    ):
+        """
+        This function is applied to a situation where connection between two stations on a line is delayed.
+        Thus the travel time between these two stations on that line increases.
 
         Parameters
         ----------
-        node : int
-            index of a given node
+        line_idx : int
+            The index of the line
+        station1_idx : int
+            The index of the station1
+        station2_idx : int
+            The index of the station2
+        delay_multiplier : int
+            The travel time(weight) is multiplied by this factor
         """
-        self.matrix[node, 0 : node + 1] = np.zeros(node + 1)
-        self.matrix[0 : node + 1, node] = np.zeros(node + 1)
+
+        for i, edge in enumerate(self.edges):
+            if edge[3] == line_idx and (
+                (edge[0] == station1_idx and edge[1] == station2_idx)
+                or (edge[0] == station2_idx and edge[1] == station1_idx)
+            ):
+                updated_weight = int(edge[2] * delay_multiplier)
+                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
+                self.matrix[edge[0], edge[1]] = updated_weight
+                self.matrix[edge[1], edge[0]] = updated_weight
+
+    # The third disruption type
+    def delay_to_entire_one_station(self, station_idx, delay_multiplier):
+        """
+        This function is applied to a situation where one station is delayed for the entire network.
+        Thus the connections of each line that contains this station is delayed.
+
+
+        Parameters
+        ----------
+        station_idx : int
+            The index of the affected station
+        delay_multiplier : int
+            The travel time(weight) is multiplied by this factor
+        """
+
+        for i, edge in enumerate(self.edges):
+            if edge[0] == station_idx or edge[1] == station_idx:
+                updated_weight = int(edge[2] * delay_multiplier)
+                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
+                self.matrix[edge[0], edge[1]] = updated_weight
+                self.matrix[edge[1], edge[0]] = updated_weight
+
+    # The fourth disruption type
+    def delay_to_entire_between_stations(
+        self, station1_idx, station2_idx, delay_multiplier
+    ):
+        """
+        This function is applied to a situation where connection between two stations for entire network is delayed.
+        Thus the travel time between these two stations for every line that contains this connection increases.
+
+        Parameters
+        ----------
+        station1_idx : int
+            The index of the first affected station
+        station2_idx : int
+            The index of the second affected station
+        delay_multiplier : int
+            The travel time(weight) is multiplied by this factor
+        """
+        
+        for i, edge in enumerate(self.edges):
+            if (edge[0] == station1_idx and edge[1] == station2_idx) or (
+                edge[0] == station2_idx and edge[1] == station1_idx
+            ):
+                updated_weight = int(edge[2] * delay_multiplier)
+                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
+                self.matrix[edge[0], edge[1]] = updated_weight
+                self.matrix[edge[1], edge[0]] = updated_weight
+
+    # The fifth disruption type
+    def delay_to_closure(self, station_list):
+        """
+        When the delay multiplier is 0, that means the station is closed, which affects the whole network.
+
+        Parameters
+        ----------
+        station_list : List
+            A list of closed stations
+        """
+
+
+        # Keep the edges that are not affected
+        self.edges = [
+            edge
+            for edge in self.edges
+            if edge[0] not in station_list and edge[1] not in station_list
+        ]
+
+        # Set all the weight connected to stations in station to 0
+        for affected_station in station_list:
+            self.matrix[affected_station, :] = 0
+            self.matrix[:, affected_station] = 0
+            
+
+
 
     def distant_neighbours(self, n, v) -> List[int]:
         """
@@ -139,23 +248,23 @@ class Network:
         list of int
             List of indexes of nodes that are n-distant neighbours.
         """
+        visited = [0 for _ in range(self.matrix.shape[0])]
+        visited[v] = 1
+        visiting_queue = Queue()
+        visiting_queue.put((v, 0))
+        neighbours = []
+        while not visiting_queue.empty():
+            current_node, depth = visiting_queue.get()
+            if depth > n:
+                return neighbours
+            if depth > 0:
+                neighbours.append(current_node)
+            for i in range(self.matrix.shape[0]):
+                if self.matrix[current_node, i] != 0 and not visited[i]:
+                    visited[i] = 1
+                    visiting_queue.put((i, depth + 1))
+        return neighbours
 
-        # Breadth-first search for nth order neighbours:
-        dim = len(self.matrix)
-        visited = [False for i in range(dim)]
-        queue = [v]
-        distance = [float('inf') for i in range(dim)]
-
-        visited[v] = True
-        distance[v] = 0
-        while queue:
-            node = queue.pop(0)
-            for i in range(dim):
-                if not visited[i] and adjacency_matrix[node][i] > 0:
-                    visited[i] = True
-                    distance[i] = distance[node] + 1
-                    queue.append(i)
-        return [j for j, x in enumerate(distance) if 0 < x <= n]
 
     def dijkstra(self, start_node, dest_node) -> [int]:
         """

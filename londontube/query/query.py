@@ -84,7 +84,36 @@ def apply_disruptions(network, disruptions):
         The disruption information
     """
     
-    pass
+    for disruption in disruptions:
+        # Not every disruption information have line or stations keyword
+        line = disruption.get("line")
+        stations_affected = disruption.get("stations", [])
+        delay_multiplier = disruption["dealy"]
+    
+        # Some stations are closed
+        if delay_multiplier == 0:
+            network.delay_to_closure(stations_affected)
+        # One specific line is affected
+        elif line is not None:
+            if len(stations_affected) == 1:
+                network.delay_to_specific_line_one_station(line, stations_affected[0], delay_multiplier)
+        # The connection between two stations is affected in one line
+            elif len(stations_affected) == 2:
+                network.delay_to_specific_line_between_stations(
+                    line, stations_affected[0], stations_affected[1], delay_multiplier
+                )
+        else:
+        # Line is empty -> Disruption affects the whole line 
+        # All connections in the whole network contain one specific station are affected
+            if len(stations_affected) == 1: # 
+                network.delay_to_entire_one_station(stations_affected[0], delay_multiplier)
+        # All connections contain in the whole network contain two specific stations are affected
+            elif len(stations_affected) == 2:
+                network.delay_to_entire_between_stations(
+                    stations_affected[0], stations_affected[1], delay_multiplier
+                )
+
+    return network
   
 def get_entire_network():
     """
