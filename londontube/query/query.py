@@ -88,7 +88,7 @@ def apply_disruptions(network, disruptions):
         # Not every disruption information have line or stations keyword
         line = disruption.get("line")
         stations_affected = disruption.get("stations", [])
-        delay_multiplier = disruption["dealy"]
+        delay_multiplier = disruption["delay"]
     
         # Some stations are closed
         if delay_multiplier == 0:
