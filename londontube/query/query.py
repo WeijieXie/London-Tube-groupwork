@@ -162,10 +162,13 @@ def network_of_given_day(date):
         Network representation of londontube.
     """
     
+    if date != None:
+        disruptions = disruption_info(date)
+    else:
+        disruptions = disruption_info()
     entire_network = get_entire_network()
-    disruptions = disruption_info(date)
     changed_network = apply_disruptions(entire_network, disruptions)
-    
+
     return changed_network
 
 
