@@ -26,7 +26,7 @@ class Network:
         self.edges = []
         for edge in list_of_edges:
             self.edges.append(
-                edge[0], edge[1], edge[2], edge[3]
+                (edge[0], edge[1], edge[2], edge[3])
             )  # edge[3] is the identifier of a line
             self.matrix[edge[0], edge[1]] = edge[2]
             self.matrix[edge[1], edge[0]] = edge[2]
