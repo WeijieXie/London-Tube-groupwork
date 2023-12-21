@@ -232,7 +232,7 @@ def convert_indices_to_names(station_indices):
         A list of corresponding names
     """
 
-    dict_indices_names, _ = query_station_all_info()
+    dict_indices_names, _, _ = query_station_all_info()
     # Unexsited station is marked
     result = [
         dict_indices_names.get(index, "Unexisted station index")
@@ -257,7 +257,7 @@ def convert_names_to_indices(station_names):
        A list of corresponding indices
     """
 
-    _, dict_names_indices = query_station_all_info()
+    _, dict_names_indices, _ = query_station_all_info()
     # Unexisted station is marked as -1
     result = [dict_names_indices.get(name.lower(), -1) for name in station_names]
 
