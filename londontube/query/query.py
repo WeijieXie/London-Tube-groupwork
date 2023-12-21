@@ -217,7 +217,7 @@ def query_station_all_info():
     return dict_indices_names, dict_names_indices, dict_position
 
 
-def convert_idx_to_name(station_indices):
+def convert_indices_to_names(station_indices):
     """
     Convert the station indices to corresponding names.
 
@@ -242,7 +242,7 @@ def convert_idx_to_name(station_indices):
     return result
 
 
-def covert_names_to_indices(station_names):
+def convert_names_to_indices(station_names):
     """
     Convert a list of station names to corresponding indices
 
