@@ -1,23 +1,33 @@
 from _ast import arguments
 from argparse import ArgumentParser
-from londontube.query.query import network_of_given_day, query_station_info
+from londontube.query.query import (
+    network_of_given_day,
+    convert_idices_to_names,
+    convert_names_to_indices,
+)
 from datetime import datetime
 import matplotlib.pyplot as plt
 
 
-def process_station(string: str):
-    if string.isdigit():
-        return int(string)
+def convert_to_station_index(station):
+    if station.isalpha():
+        return convert_names_to_indices([station])[0]
     else:
-        return string
+        return int(station)
 
 
 def build_parser():
     parser = ArgumentParser(description="Journey Planner for London tube")
 
-    parser.add_argument("--plot", action="store_true", help="Generate a plot of the journey")
-    parser.add_argument("start", type=process_station, help="Start station's name or index")
-    parser.add_argument("destination", type=process_station, help="Destination stations's name or index")
+    parser.add_argument(
+        "--plot", action="store_true", help="Generate a plot of the journey"
+    )
+    parser.add_argument(
+        "start", type=process_station, help="Start station's name or index"
+    )
+    parser.add_argument(
+        "destination", type=process_station, help="Destination stations's name or index"
+    )
     parser.add_argument(
         "setoff_date",
         nargs="?",
@@ -34,21 +44,16 @@ def main():
     parser = build_parser()
     arguments = parser.parse_args()
 
-
     start, destination = arguments.start, arguments.destination
-    if type(arguments.start) == str:
-        [start], _, _, _ = query_station_info([arguments.start])
 
-    if type(arguments.destination) == str:
-        [destination], _, _, _ = query_station_info([arguments.destination])
+    start_node = convert_to_station_index(start)
+    end_node = convert_to_station_index(destination)
 
     network = network_of_given_day(arguments.setoff_date)
-    path = network.dijkstra(start, destination)
-    path_name = query_station_info(path)
-    output = "Start: "
-    for station in path_name[: len(path_name) - 1]:
-        output += station + "\n"
-    output += "End: " + path_name[len(path_name) - 1] + "\n"
+    path, travel_time = network.dijkstra(start_node, end_node)
+    path_name = convert_idices_to_names(path)
+
+    # TODO: Add desired path output format
 
     if arguments.plot:
         (
@@ -66,7 +71,8 @@ def main():
             "journey_from_" + arguments.start + "_to_" + arguments.destination + ".png"
         )
         plt.savefig(file_string)
-    print(output)
+    
+
 
 if __name__ == "__main__":
     main()
