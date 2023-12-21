@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 import math
 from queue import Queue
-
+import heapq
 
 class Network:
     """
@@ -267,49 +267,134 @@ class Network:
         return neighbours
 
 
-    def dijkstra(self, start_node, dest_node) -> [int]:
+    def dijkstra(self, start_node, end_node):
         """
-        Find the shortest path from the start node to the destination node using the given network.
+        Find the shortest path between the start and destination nodes using Dijkstra's algorithm.
+
+        This method calculates the shortest path in terms of travel time between the specified start and destination nodes in the network. 
+        It uses Dijkstra's algorithm, which is an algorithm for finding the shortest paths between nodes in a graph.
 
         Parameters
         ----------
         start_node : int
-            Index of the start node.
-        dest_node : int
-            Index of the destination node.
+            Index of the start node in the network.
+        end_node : int
+            Index of the destination node in the network.
 
         Returns
         -------
-        list of int
-            List of indexes of nodes forming the shortest path.
+        path : list of int
+            The shortest path from the start node to the destination node as a list of node indices. Returns `None` if no path is found.
+        total_cost : float
+            The total travel time of the shortest path. Returns `None` if no path is found.
+
+        Notes
+        -----
+        The algorithm works by first initializing the distance to all nodes as infinity, except for the start node, which is set to 0. 
+        It then iteratively relaxes the distances to the nodes by considering all unvisited neighbors of the current node. 
+        The process continues until all nodes are visited or the destination node's shortest path is determined.
+        
+        Examples
+        --------
+        >>> n_stations = 4
+        >>> list_of_edge = [(0, 1, 3),
+                            (1, 2, 3),
+                            (1, 3, 4),
+                            (2, 3, 5)]
+        >>> network = Network(n_stations, list_of_edge)
+        >>> network.dijkstra(0, 2)
+        ([0, 1, 2], 5)
+        >>> network.dijkstra(0, 3)
+        ([0, 1, 3], 7)
         """
-        visited = [False for _ in range(self.matrix.shape[0])]
-        tentative_costs = [math.inf for _ in range(self.matrix.shape[0])]
+         
+        nodes_num = self.n_nodes # number of nodes
+        visited_list = [False] * nodes_num
+        # Set the tentative cost
+        tentative_costs = [math.inf] * nodes_num
         tentative_costs[start_node] = 0
-        previous = [start_node for _ in range(self.matrix.shape[0])]
-        while not all(visited):
-            current = None
-            minimum = math.inf
-            for i in range(len(visited)):
-                if not visited[i] and tentative_costs[i] <= minimum:
-                    minimum = tentative_costs[i]
-                    current = i
-            visited[current] = True
-            for i in range(self.matrix.shape[0]):
-                if self.matrix[current, i] != 0 and not visited[i]:
-                    proposed_cost = tentative_costs[current] + self.matrix[current, i]
-                    if tentative_costs[i] > proposed_cost:
-                        tentative_costs[i] = proposed_cost
-                        previous[i] = current
+        predecessor = [None] * nodes_num
+        
+        # Use priority_queue to track smallest tentative cost
+        priority_queue = [(0, start_node)]
+        
+        while priority_queue:
+            smallest_cost, pop_node = heapq.heappop(priority_queue)
+            
+            # If one node has already been visited skip it
+            if visited_list[pop_node]:
+                continue
+            
+            visited_list[pop_node] = True
+            
+            # When the destination appears
+            if pop_node == end_node:
+                break
+            
+            # Check the connected nodes of the popped node
+            for connected_node, travel_cost in enumerate(self.matrix[pop_node]):
+            # Make sure there is a connection
+                if travel_cost > 0 and not visited_list[connected_node]:
+                    sum_cost = smallest_cost + travel_cost
+                    # When the shorter path to this connected node is found
+                    if sum_cost < tentative_costs[connected_node]:
+                        tentative_costs[connected_node] = sum_cost  
+                        predecessor[connected_node] = pop_node
+                        heapq.heappush(priority_queue, (sum_cost, connected_node))
+            
+        if tentative_costs[end_node] == math.inf:
+            return None, None  # Indicates that no path was found
+        else:
+            return self.construct_path(predecessor, start_node, end_node), tentative_costs[end_node]
+        
+    def construct_path(self, predecessor, start_node, end_node):
+        """
+        Construct the shortest path from the start node to the destination node.
 
-        return self.reconstruct_path(previous, start_node, dest_node)
+        Parameters
+        ----------
+        predecessor : list of int
+            Array containing the index of the preceding node in the shortest path for each node in the network.
+        start_node : int
+            Index of the start node in the network.
+        end_node : int
+            Index of the destination node in the network.
 
-    def reconstruct_path(self, previous, start_node, dest_node):
-        path = []
-        current = dest_node
-        while True:
-            path.append(current)
-            current = previous[current]
-            if current == start_node:
-                path.append(start_node)
-                return path[::-1]
+        Returns
+        -------
+        path_list : list of int
+            The constructed shortest path from the start node to the destination node as a list of node indices.
+
+        Notes
+        -----
+        This method is used as a helper for Dijkstra's algorithm. 
+        It backtracks from the destination node using the `predecessor` array to construct the shortest path.
+
+        Examples
+        --------
+        >>> predecessor = [None, 0, 1, 5, 1, 2]
+        >>> construct_path(predecessor, 0, 3)
+        [0, 1, 2, 5, 3]
+
+        >>> predecessor = [None, 0, 0]
+        >>> construct_path(predecessor, 0, 4)
+        [0, 4]
+        """
+        path_list = []
+        added_note = end_node # Locate the predecessor of the added_note
+        
+        # The predecessor of the start node is None
+        while added_note is not None:
+            path_list.append(added_note)
+            added_note = predecessor[added_note]
+        
+        # The end node is at the start in the path list
+        path_list.reverse() 
+        
+        if path_list[0] == start_node:
+            return path_list
+        else:
+            return []
+        
+        
+        
