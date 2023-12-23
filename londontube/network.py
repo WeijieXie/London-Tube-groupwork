@@ -246,8 +246,17 @@ class Network:
 
         Returns
         -------
-        list of int
+        neighbours : list of int
             List of indexes of nodes that are n-distant neighbours.
+
+        Notes
+        -------
+        This method uses the well-known Breadth-First Search (BFS) to find nth-order neighbors in the network.
+
+        A queue is used to 'visit' first the initial node, then its neighbours and their neighbors, and so on iteratively,
+        until all n-th order neighbor nodes have been found. Visited nodes are tracked to not double back through the network.
+
+        This method stops when all n-distant neighbor nodes have been found, to save computation time.
         """
         visited = [0 for _ in range(self.matrix.shape[0])]
         visited[v] = 1
@@ -264,7 +273,7 @@ class Network:
                 if self.matrix[current_node, i] != 0 and not visited[i]:
                     visited[i] = 1
                     visiting_queue.put((i, depth + 1))
-        return neighbours
+        return sorted(neighbours)
 
 
     def dijkstra(self, start_node, end_node):
