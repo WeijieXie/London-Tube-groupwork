@@ -90,20 +90,17 @@ def apply_disruptions(network, disruptions):
         stations_affected = disruption.get("stations", [])
         delay_multiplier = disruption["delay"]
 
-        # Some stations are closed
-        if delay_multiplier == 0:
-            network.delay_to_closure(stations_affected)
         # One specific line is affected
-        elif line is not None:
-            if len(stations_affected) == 1:
-                network.delay_to_specific_line_one_station(
-                    line, stations_affected[0], delay_multiplier
-                )
-            # The connection between two stations is affected in one line
-            elif len(stations_affected) == 2:
-                network.delay_to_specific_line_between_stations(
-                    line, stations_affected[0], stations_affected[1], delay_multiplier
-                )
+        if line is not None:
+                if len(stations_affected) == 1:
+                            network.delay_to_specific_line_one_station(
+                                line, stations_affected[0], delay_multiplier
+                            )
+                # The connection between two stations is affected in one line
+                elif len(stations_affected) == 2:
+                        network.delay_to_specific_line_between_stations(
+                            line, stations_affected[0], stations_affected[1], delay_multiplier
+                        )
         else:
             # Line is empty -> Disruption affects the whole line
             # All connections in the whole network contain one specific station are affected
@@ -116,7 +113,9 @@ def apply_disruptions(network, disruptions):
                 network.delay_to_entire_between_stations(
                     stations_affected[0], stations_affected[1], delay_multiplier
                 )
-
+            elif delay_multiplier == 0:
+                network.delay_to_closure(stations_affected)
+            
     return network
 
 
@@ -232,7 +231,7 @@ def convert_indices_to_names(station_indices):
         A list of corresponding names
     """
 
-    dict_indices_names, _ = query_station_all_info()
+    dict_indices_names, _, _= query_station_all_info()
     # Unexsited station is marked
     result = [
         dict_indices_names.get(index, "Unexisted station index")
@@ -257,8 +256,9 @@ def convert_names_to_indices(station_names):
        A list of corresponding indices
     """
 
-    _, dict_names_indices = query_station_all_info()
+    _, dict_names_indices, _ = query_station_all_info()
     # Unexisted station is marked as -1
     result = [dict_names_indices.get(name.lower(), -1) for name in station_names]
 
     return result
+
