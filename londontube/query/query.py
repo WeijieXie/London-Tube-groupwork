@@ -4,6 +4,15 @@ import csv
 from io import StringIO
 import pandas as pd
 
+def check_http_connection():
+    """
+    Check if the network is connected by trying to access a specific HTTP service.
+    """
+    try:
+        response = requests.get("https://rse-with-python.arc.ucl.ac.uk/londontube-service", timeout=20)
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
 
 def connectivity_of_line(line_index):
     """
