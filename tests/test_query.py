@@ -14,3 +14,10 @@ def test_check_http_connection():
         assert check_http_connection() == False
         assert check_http_connection() == False
         mock_get.assert_called()
+
+# Test the connectivity_of_line function with a known line index.
+@pytest.mark.parametrize("line_index", [0, 5, 11])
+def test_connectivity_of_line(line_index):
+    network = connectivity_of_line(line_index)
+    assert isinstance(network, Network), "The returned object should be an instance of Network."
+    assert network.n_nodes > 0, "The network should have more than 0 nodes."
