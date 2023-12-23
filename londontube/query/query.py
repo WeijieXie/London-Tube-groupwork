@@ -29,6 +29,10 @@ def connectivity_of_line(line_index):
     Network
         Network of a line.
     """
+
+    if check_http_connection() == False:
+        raise requests.RequestException("poor connection, please check the network")
+    
     query_total_info = (
         f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
     )
@@ -67,6 +71,9 @@ def disruption_info(date=None):
     List
         A list of dictionary contains disruption information
     """
+
+    if check_http_connection() == False:
+        raise requests.RequestException("poor connection, please check the network")
 
     # Return today's disruption information if not date provided
     if date == None:
@@ -138,7 +145,9 @@ def get_entire_network():
     Network
         An entire underground network of London
     """
-
+    if check_http_connection() == False:
+        raise requests.RequestException("poor connection, please check the network")
+    
     # Query the information of the network
     query_total_info = (
         f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
@@ -201,6 +210,10 @@ def query_station_all_info():
         The second dictionary gets station name (in lowercase) as key and station index as value.
         The third dictionary gets station index as key and its position(latitude and longitude) as value.
     """
+
+    if check_http_connection() == False:
+        raise requests.RequestException("poor connection, please check the network")
+    
     response = requests.get(
         "https://rse-with-python.arc.ucl.ac.uk/londontube-service/stations/query?id=all"
     )
