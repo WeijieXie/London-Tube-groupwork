@@ -2,7 +2,10 @@
 import pytest
 from unittest import mock
 
+import csv
 import requests
+import numpy as np
+
 from londontube.network import Network
 from londontube.query.query import (
     check_http_connection,
@@ -27,13 +30,14 @@ def test_check_http_connection():
         mock_get.assert_called()
 
 
-# Test the connectivity_of_line function with a known line index.
+# Test the connectivity_of_line function.
 @pytest.mark.parametrize("line_index", [0, 5, 11])
 def test_connectivity_of_line(line_index):
     network = connectivity_of_line(line_index)
     assert isinstance(
         network, Network
     ), "The returned object should be an instance of Network."
+    assert network.matrix.shape == (296, 296)
     assert network.n_nodes == 296, "The network should have more than 0 nodes."
 
 
@@ -185,6 +189,86 @@ def test_disruption_info_with_date(date, info_list):
     disruptions = disruption_info(date)
     assert isinstance(disruptions, list), "Disruption info should be a list."
     assert disruptions == info_list
+
+
+def read_csv_content(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        return file.read()
+
+
+network_A = Network(5, [[0, 1, 10, 0], [1, 2, 20, 0]])
+network_B = Network(5, [[3, 1, 30, 1], [1, 4, 40, 1]])
+network_C = Network(5, [[2, 1, 10, 2]])
+
+
+@pytest.mark.parametrize(
+    "line_info, line_net_list, entire_network",
+    [
+        (
+            {
+                "lines": {
+                    "0": "A",
+                    "1": "B",
+                },
+                "n_lines": 2,
+                "n_stations": 5,
+            },
+            [network_A, network_B],
+            np.array(
+                [
+                    [0, 10, 0, 0, 0],
+                    [10, 0, 20, 30, 40],
+                    [0, 20, 0, 0, 0],
+                    [0, 30, 0, 0, 0],
+                    [0, 40, 0, 0, 0],
+                ]
+            ),
+        ),
+        (
+            {
+                "lines": {
+                    "0": "A",
+                    "1": "B",
+                    "2": "C",
+                },
+                "n_lines": 3,
+                "n_stations": 5,
+            },
+            [network_A, network_B, network_C],
+            np.array(
+                [
+                    [0, 10, 0, 0, 0],
+                    [10, 0, 10, 30, 40],
+                    [0, 10, 0, 0, 0],
+                    [0, 30, 0, 0, 0],
+                    [0, 40, 0, 0, 0],
+                ]
+            ),
+        ),
+    ],
+)
+def test_get_entire_network(line_info, line_net_list, entire_network):
+    with mock.patch(
+        "londontube.query.query.check_http_connection", return_value=True
+    ) as mock_connection:
+        with mock.patch(
+            "requests.get",
+            side_effect=[
+                mock.Mock(json=mock.Mock(return_value=line_info)),
+            ],
+        ):
+            with mock.patch(
+                "londontube.query.query.connectivity_of_line",
+                side_effect=line_net_list,
+            ):
+                network = get_entire_network()
+                assert isinstance(
+                    network, Network
+                ), "The returned object should be an instance of Network."
+                assert network.matrix.all() == entire_network.all()
+                assert (
+                    network.n_nodes == 5
+                ), "The network should have more than 0 nodes."
 
 
 # @pytest.mark.parametrize(
