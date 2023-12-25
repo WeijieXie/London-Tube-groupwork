@@ -45,9 +45,9 @@ network_C = Network(5, [[2, 1, 10, 2]])
 @pytest.mark.parametrize(
     "csv_content,network_expected",
     [
-        (read_csv_content("tests\line_A.csv"), network_A),
-        (read_csv_content("tests\line_B.csv"), network_B),
-        (read_csv_content("tests\line_C.csv"), network_C),
+        (read_csv_content("tests/line_A.csv"), network_A),
+        (read_csv_content("tests/line_B.csv"), network_B),
+        (read_csv_content("tests/line_C.csv"), network_C),
     ],
 )
 def test_connectivity_of_line(csv_content, network_expected):
@@ -231,6 +231,63 @@ def test_disruption_info_with_date(date, info_list):
     assert disruptions == info_list
 
 
+# Test the apply_disruptions function.
+entire_network_without_disruption = Network(
+    5, [(0, 1, 10, 0), (1, 2, 20, 0), (3, 1, 30, 1), (1, 4, 40, 1), (2, 1, 50, 2)]
+)
+
+
+@pytest.mark.parametrize(
+    "disruptions_info,network_expected",
+    [
+        (
+            [{"delay": 0, "line": 0, "stations": [0,1]},{"delay": 10, "line": 0, "stations": [1,2]}],
+            np.array(
+                [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 50, 30, 40],
+                    [0, 50, 0, 0, 0],
+                    [0, 30, 0, 0, 0],
+                    [0, 40, 0, 0, 0],
+                ]
+            ),
+        ),
+        (
+            [{"delay": 0, "line": 0, "stations": [1]},{"delay": 2, "stations": [2]}],
+            np.array(
+                [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 60, 80],
+                    [0, 0, 0, 0, 0],
+                    [0, 60, 0, 0, 0],
+                    [0, 80, 0, 0, 0],
+                ]
+            ),
+        ),
+        (
+            [{"delay": 0, "stations": [1]}],
+            np.array(
+                [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                ]
+            ),
+        ),
+    ],
+)
+def test_apply_disruptions(disruptions_info, network_expected):
+    network = apply_disruptions(entire_network_without_disruption, disruptions_info)
+    assert isinstance(
+        network, Network
+    ), "The returned object should be an instance of Network."
+    assert network.matrix.all() == network_expected.all()
+    assert network.n_nodes == 5, "The network should have more than 0 nodes."
+
+
+#
 network_A = Network(5, [[0, 1, 10, 0], [1, 2, 20, 0]])
 network_B = Network(5, [[3, 1, 30, 1], [1, 4, 40, 1]])
 network_C = Network(5, [[2, 1, 10, 2]])
