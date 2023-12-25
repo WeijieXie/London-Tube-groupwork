@@ -39,7 +39,7 @@ def read_csv_content(file_path):
 
 network_A = Network(5, [[0, 1, 10, 0], [1, 2, 20, 0]])
 network_B = Network(5, [[3, 1, 30, 1], [1, 4, 40, 1]])
-network_C = Network(5, [[2, 1, 10, 2]])
+network_C = Network(5, [[2, 1, 20, 2]])
 
 
 @pytest.mark.parametrize(
@@ -76,7 +76,7 @@ def test_connectivity_of_line(csv_content, network_expected):
                 network, Network
             ), "The returned object should be an instance of Network."
             assert network.matrix.shape == (5, 5)
-            assert network.matrix.all() == network_expected.matrix.all()
+            assert np.array_equal(network.matrix,network_expected.matrix)
             assert network.n_nodes == 5, "The network should have more than 0 nodes."
 
 
@@ -241,7 +241,10 @@ entire_network_without_disruption = Network(
     "disruptions_info,network_expected",
     [
         (
-            [{"delay": 0, "line": 0, "stations": [0,1]},{"delay": 10, "line": 0, "stations": [1,2]}],
+            [
+                {"delay": 0, "line": 0, "stations": [0, 1]},
+                {"delay": 10, "line": 0, "stations": [1, 2]},
+            ],
             np.array(
                 [
                     [0, 0, 0, 0, 0],
@@ -253,14 +256,14 @@ entire_network_without_disruption = Network(
             ),
         ),
         (
-            [{"delay": 0, "line": 0, "stations": [1]},{"delay": 2, "stations": [2]}],
+            [{"delay": 0, "line": 0, "stations": [1]}, {"delay": 2, "stations": [2]}],
             np.array(
                 [
                     [0, 0, 0, 0, 0],
-                    [0, 0, 0, 60, 80],
-                    [0, 0, 0, 0, 0],
-                    [0, 60, 0, 0, 0],
-                    [0, 80, 0, 0, 0],
+                    [0, 0, 100, 30, 40],
+                    [0, 100, 0, 0, 0],
+                    [0, 30, 0, 0, 0],
+                    [0, 40, 0, 0, 0],
                 ]
             ),
         ),
@@ -283,7 +286,7 @@ def test_apply_disruptions(disruptions_info, network_expected):
     assert isinstance(
         network, Network
     ), "The returned object should be an instance of Network."
-    assert network.matrix.all() == network_expected.all()
+    assert np.array_equal(network.matrix,network_expected)
     assert network.n_nodes == 5, "The network should have more than 0 nodes."
 
 
@@ -357,10 +360,107 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
                 assert isinstance(
                     network, Network
                 ), "The returned object should be an instance of Network."
-                assert network.matrix.all() == entire_network.all()
+                assert np.array_equal(network.matrix,entire_network)
                 assert (
                     network.n_nodes == 5
                 ), "The network should have more than 0 nodes."
+
+
+#
+
+
+@pytest.mark.parametrize(
+    "network_original,disruptions_info,network_expected",
+    [
+        (
+            Network(
+                5,
+                [
+                    (0, 1, 10, 0),
+                    (1, 2, 20, 0),
+                    (3, 1, 30, 1),
+                    (1, 4, 40, 1),
+                    (2, 1, 50, 2),
+                ],
+            ),
+            [
+                {"delay": 0, "line": 0, "stations": [0, 1]},
+                {"delay": 10, "line": 0, "stations": [1, 2]},
+            ],
+            np.array(
+                [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 50, 30, 40],
+                    [0, 50, 0, 0, 0],
+                    [0, 30, 0, 0, 0],
+                    [0, 40, 0, 0, 0],
+                ]
+            ),
+        ),
+        (
+            Network(
+                5,
+                [
+                    (0, 1, 10, 0),
+                    (1, 2, 20, 0),
+                    (3, 1, 30, 1),
+                    (1, 4, 40, 1),
+                ],
+            ),
+            [
+                {"delay": 0, "line": 0, "stations": [0, 1]},
+                {"delay": 10, "line": 0, "stations": [1, 2]},
+            ],
+            np.array(
+                [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 200, 30, 40],
+                    [0, 200, 0, 0, 0],
+                    [0, 30, 0, 0, 0],
+                    [0, 40, 0, 0, 0],
+                ]
+            ),
+        ),
+        (
+            Network(
+                3,
+                [
+                    (0, 1, 10, 0),
+                    (1, 2, 20, 0),
+                    (2, 1, 50, 1),
+                ],
+            ),
+            [
+                {"delay": 3, "line": 0, "stations": [0, 1]},
+                {"delay": 2, "line": 0, "stations": [1, 2]},
+            ],
+            np.array(
+                [
+                    [0, 30, 0],
+                    [30, 0, 40],
+                    [0, 40, 0],
+                ]
+            ),
+        ),
+    ],
+)
+def test_network_of_given_day(network_original, disruptions_info, network_expected):
+    # 模拟disruption_info和get_entire_network的返回值
+    with mock.patch(
+        "londontube.query.query.disruption_info", return_value=disruptions_info
+    ):
+        with mock.patch(
+            "londontube.query.query.get_entire_network", return_value=network_original
+        ):
+            # 调用测试的函数
+            result = network_of_given_day("2021-12-25")
+
+            # 断言
+            assert isinstance(
+                result, Network
+            ), "The result should be an instance of Network."
+
+            assert np.array_equal(result.matrix,network_expected)
 
 
 # @pytest.mark.parametrize(
