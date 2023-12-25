@@ -17,6 +17,7 @@ from londontube.query.query import (
 )
 
 
+# Test the check_http_connection function.
 def test_check_http_connection():
     mock_responses = [
         mock.Mock(status_code=200),
@@ -31,17 +32,55 @@ def test_check_http_connection():
 
 
 # Test the connectivity_of_line function.
-@pytest.mark.parametrize("line_index", [0, 5, 11])
-def test_connectivity_of_line(line_index):
-    network = connectivity_of_line(line_index)
-    assert isinstance(
-        network, Network
-    ), "The returned object should be an instance of Network."
-    assert network.matrix.shape == (296, 296)
-    assert network.n_nodes == 296, "The network should have more than 0 nodes."
+def read_csv_content(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        return file.read()
 
 
-# Test the disruption_info function for today's disruptions.
+network_A = Network(5, [[0, 1, 10, 0], [1, 2, 20, 0]])
+network_B = Network(5, [[3, 1, 30, 1], [1, 4, 40, 1]])
+network_C = Network(5, [[2, 1, 10, 2]])
+
+
+@pytest.mark.parametrize(
+    "csv_content,network_expected",
+    [
+        (read_csv_content("tests\line_A.csv"), network_A),
+        (read_csv_content("tests\line_B.csv"), network_B),
+        (read_csv_content("tests\line_C.csv"), network_C),
+    ],
+)
+def test_connectivity_of_line(csv_content, network_expected):
+    with mock.patch("londontube.query.query.check_http_connection", return_value=True):
+        with mock.patch(
+            "requests.get",
+            side_effect=[
+                mock.Mock(
+                    json=mock.Mock(
+                        return_value={
+                            "lines": {
+                                "0": "A",
+                                "1": "B",
+                                "2": "C",
+                            },
+                            "n_lines": 3,
+                            "n_stations": 5,
+                        }
+                    )
+                ),
+                mock.Mock(content=csv_content.encode("utf-8")),
+            ],
+        ):
+            network = connectivity_of_line(0)
+            assert isinstance(
+                network, Network
+            ), "The returned object should be an instance of Network."
+            assert network.matrix.shape == (5, 5)
+            assert network.matrix.all() == network_expected.matrix.all()
+            assert network.n_nodes == 5, "The network should have more than 0 nodes."
+
+
+# Test the disruption_info function in poor network.
 def test_disruption_info_poor_network():
     with mock.patch(
         "londontube.query.query.check_http_connection", return_value=False
@@ -50,6 +89,7 @@ def test_disruption_info_poor_network():
             disruption_info()
 
 
+# Test the disruption_info function for today's disruptions.
 def test_disruption_info_none():
     disruptions = disruption_info()
     assert isinstance(disruptions, list), "Disruption info should be a list."
@@ -189,11 +229,6 @@ def test_disruption_info_with_date(date, info_list):
     disruptions = disruption_info(date)
     assert isinstance(disruptions, list), "Disruption info should be a list."
     assert disruptions == info_list
-
-
-def read_csv_content(file_path):
-    with open(file_path, "r", encoding="utf-8") as file:
-        return file.read()
 
 
 network_A = Network(5, [[0, 1, 10, 0], [1, 2, 20, 0]])
