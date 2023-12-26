@@ -15,6 +15,8 @@ from londontube.query.query import (
     get_entire_network,
     network_of_given_day,
     query_station_all_info,
+    convert_indices_to_names,
+    convert_names_to_indices,
 )
 
 
@@ -462,6 +464,28 @@ def test_network_of_given_day(network_original, disruptions_info, network_expect
 
 
 # test query_station_all_info()
+dict_indices_names_expect = {
+    0: "a",
+    1: "b",
+    2: "c",
+    3: "d",
+    4: "e",
+}
+dict_names_indices_expect = {
+    "a": 0,
+    "b": 1,
+    "c": 2,
+    "d": 3,
+    "e": 4,
+}
+dict_position_expect = {
+    0: {"latitude": -1, "longitude": 0},
+    1: {"latitude": 0, "longitude": 0},
+    2: {"latitude": 1, "longitude": 0},
+    3: {"latitude": 0, "longitude": 1},
+    4: {"latitude": 0, "longitude": -1},
+}
+
 csv_text = read_csv_content("tests/station_all_info.csv")
 
 
@@ -473,27 +497,45 @@ def test_query_station_all_info():
                 dict_names_indices,
                 dict_position,
             ) = query_station_all_info()
-            assert dict_indices_names== {
-                0: "a",
-                1: "b",
-                2: "c",
-                3: "d",
-                4: "e",
-            }
-            assert dict_names_indices  == {
-                "a": 0,
-                "b": 1,
-                "c": 2,
-                "d": 3,
-                "e": 4,
-            }
-            assert dict_position == {
-                0: {"latitude": -1, "longitude": 0},
-                1: {"latitude": 0, "longitude": 0},
-                2: {"latitude": 1, "longitude": 0},
-                3: {"latitude": 0, "longitude": 1},
-                4: {"latitude": 0, "longitude": -1},
-            }
+            assert dict_indices_names == dict_indices_names_expect
+            assert dict_names_indices == dict_names_indices_expect
+            assert dict_position == dict_position_expect
+
+
+# test convert_indices_to_names() func
+@pytest.mark.parametrize(
+    "station_indices,names_expected",
+    [([0], ["a"]), ([0, 1, 2], ["a", "b", "c"]), ([1, 4], ["b", "e"])],
+)
+def test_convert_indices_to_names(station_indices, names_expected):
+    with mock.patch(
+        "londontube.query.query.query_station_all_info",
+        return_value=(
+            dict_indices_names_expect,
+            dict_names_indices_expect,
+            dict_position_expect,
+        ),
+    ):
+        result = convert_indices_to_names(station_indices)
+        assert result == names_expected
+
+
+# test convert_names_to_indices() func
+@pytest.mark.parametrize(
+    "station_names,indices_expected",
+    [(["a"], [0]), (["a", "b", "c"], [0, 1, 2]), (["b", "e"], [1, 4])],
+)
+def test_convert_indices_to_names(station_names, indices_expected):
+    with mock.patch(
+        "londontube.query.query.query_station_all_info",
+        return_value=(
+            dict_indices_names_expect,
+            dict_names_indices_expect,
+            dict_position_expect,
+        ),
+    ):
+        result = convert_names_to_indices(station_names)
+        assert result == indices_expected
 
 
 # @pytest.mark.parametrize(
