@@ -14,6 +14,7 @@ from londontube.query.query import (
     apply_disruptions,
     get_entire_network,
     network_of_given_day,
+    query_station_all_info,
 )
 
 
@@ -76,7 +77,7 @@ def test_connectivity_of_line(csv_content, network_expected):
                 network, Network
             ), "The returned object should be an instance of Network."
             assert network.matrix.shape == (5, 5)
-            assert np.array_equal(network.matrix,network_expected.matrix)
+            assert np.array_equal(network.matrix, network_expected.matrix)
             assert network.n_nodes == 5, "The network should have more than 0 nodes."
 
 
@@ -286,7 +287,7 @@ def test_apply_disruptions(disruptions_info, network_expected):
     assert isinstance(
         network, Network
     ), "The returned object should be an instance of Network."
-    assert np.array_equal(network.matrix,network_expected)
+    assert np.array_equal(network.matrix, network_expected)
     assert network.n_nodes == 5, "The network should have more than 0 nodes."
 
 
@@ -360,7 +361,7 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
                 assert isinstance(
                     network, Network
                 ), "The returned object should be an instance of Network."
-                assert np.array_equal(network.matrix,entire_network)
+                assert np.array_equal(network.matrix, entire_network)
                 assert (
                     network.n_nodes == 5
                 ), "The network should have more than 0 nodes."
@@ -445,22 +446,54 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
     ],
 )
 def test_network_of_given_day(network_original, disruptions_info, network_expected):
-    # 模拟disruption_info和get_entire_network的返回值
     with mock.patch(
         "londontube.query.query.disruption_info", return_value=disruptions_info
     ):
         with mock.patch(
             "londontube.query.query.get_entire_network", return_value=network_original
         ):
-            # 调用测试的函数
             result = network_of_given_day("2021-12-25")
 
-            # 断言
             assert isinstance(
                 result, Network
             ), "The result should be an instance of Network."
 
-            assert np.array_equal(result.matrix,network_expected)
+            assert np.array_equal(result.matrix, network_expected)
+
+
+# test query_station_all_info()
+csv_text = read_csv_content("tests/station_all_info.csv")
+
+
+def test_query_station_all_info():
+    with mock.patch("londontube.query.query.check_http_connection", return_value=True):
+        with mock.patch("requests.get", return_value=mock.Mock(text=csv_text)):
+            (
+                dict_indices_names,
+                dict_names_indices,
+                dict_position,
+            ) = query_station_all_info()
+            assert dict_indices_names== {
+                0: "a",
+                1: "b",
+                2: "c",
+                3: "d",
+                4: "e",
+            }
+            assert dict_names_indices  == {
+                "a": 0,
+                "b": 1,
+                "c": 2,
+                "d": 3,
+                "e": 4,
+            }
+            assert dict_position == {
+                0: {"latitude": -1, "longitude": 0},
+                1: {"latitude": 0, "longitude": 0},
+                2: {"latitude": 1, "longitude": 0},
+                3: {"latitude": 0, "longitude": 1},
+                4: {"latitude": 0, "longitude": -1},
+            }
 
 
 # @pytest.mark.parametrize(
