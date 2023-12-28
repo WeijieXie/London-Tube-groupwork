@@ -2,7 +2,6 @@
 import pytest
 from unittest import mock
 
-import csv
 import requests
 import numpy as np
 
@@ -293,7 +292,7 @@ def test_apply_disruptions(disruptions_info, network_expected):
     assert network.n_nodes == 5, "The network should have more than 0 nodes."
 
 
-#
+# test get the entire network function
 network_A = Network(5, [[0, 1, 10, 0], [1, 2, 20, 0]])
 network_B = Network(5, [[3, 1, 30, 1], [1, 4, 40, 1]])
 network_C = Network(5, [[2, 1, 10, 2]])
@@ -369,9 +368,7 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
                 ), "The network should have more than 0 nodes."
 
 
-#
-
-
+# test get the network of given day function
 @pytest.mark.parametrize(
     "network_original,disruptions_info,network_expected",
     [
@@ -536,49 +533,3 @@ def test_convert_indices_to_names(station_names, indices_expected):
     ):
         result = convert_names_to_indices(station_names)
         assert result == indices_expected
-
-
-# @pytest.mark.parametrize(
-#     "name, region, CRS, lat, lon, hub",
-#     [
-#         ("Edinburgh Park", "Scotland", "abc", 55.927615, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "aBc", 55.927615, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "ABCD", 55.927615, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "EDP", 91, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "EDP", 55.927615, -180.43, False),
-#     ],
-# )
-# def test_convert_indices_to_names():
-#     pass
-
-# @pytest.mark.parametrize(
-#     "name, region, CRS, lat, lon, hub",
-#     [
-#         ("Edinburgh Park", "Scotland", "abc", 55.927615, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "aBc", 55.927615, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "ABCD", 55.927615, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "EDP", 91, -3.307829, False),
-#         ("Edinburgh Park", "Scotland", "EDP", 55.927615, -180.43, False),
-#     ],
-# )
-# def test_convert_names_to_indices():
-#     pass
-
-
-# # Test the apply_disruptions function by applying a known disruption to the network.
-# def test_apply_disruptions():
-#     network = Network()
-#     network.matrix = [[0,2,3,4]
-#                       [2,0,4,8]
-#                       [3,4,0,3]
-#                       [4,8,3,0]]
-#     disruptions = [{"line": 1, "stations": [2, 3], "delay": 2}] # Sample disruption data
-#     network_with_disruptions = apply_disruptions(network, disruptions)
-#     assert network_with_disruptions == True
-
-# # Test the network_of_given_day function for a specific date.
-# @pytest.mark.parametrize("date", ["2023-01-01","2023-08-23","2024-12-31",None])
-# def test_network_of_given_day(date):
-#     network = network_of_given_day(date)
-#     assert isinstance(network, Network), "The returned object should be an instance of Network."
-#     assert network.n_nodes > 0, "The network should have more than 0 nodes."
