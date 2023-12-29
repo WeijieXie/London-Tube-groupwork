@@ -234,8 +234,10 @@ def test_disruption_info_with_date(date, info_list):
 
 
 # Test the apply_disruptions function.
-entire_network_without_disruption = Network(
-    5, [(0, 1, 10, 0), (1, 2, 20, 0), (3, 1, 30, 1), (1, 4, 40, 1), (2, 1, 50, 2)]
+entire_network_without_disruption = (
+    Network(5, [(0, 1, 10, 0), (1, 2, 20, 0)])
+    + Network(5, [(3, 1, 30, 1), (1, 4, 40, 1)])
+    + Network(5, [(2, 1, 50, 2)])
 )
 
 
@@ -373,15 +375,10 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
     "network_original,disruptions_info,network_expected",
     [
         (
-            Network(
-                5,
-                [
-                    (0, 1, 10, 0),
-                    (1, 2, 20, 0),
-                    (3, 1, 30, 1),
-                    (1, 4, 40, 1),
-                    (2, 1, 50, 2),
-                ],
+            (
+                Network(5, [(0, 1, 10, 0), (1, 2, 20, 0)])
+                + Network(5, [(3, 1, 30, 1), (1, 4, 40, 1)])
+                + Network(5, [(2, 1, 50, 2)])
             ),
             [
                 {"delay": 0, "line": 0, "stations": [0, 1]},
@@ -398,15 +395,8 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
             ),
         ),
         (
-            Network(
-                5,
-                [
-                    (0, 1, 10, 0),
-                    (1, 2, 20, 0),
-                    (3, 1, 30, 1),
-                    (1, 4, 40, 1),
-                ],
-            ),
+            Network(5, [(0, 1, 10, 0), (1, 2, 20, 0)])
+            + Network(5, [(3, 1, 30, 1), (1, 4, 40, 1)]),
             [
                 {"delay": 0, "line": 0, "stations": [0, 1]},
                 {"delay": 10, "line": 0, "stations": [1, 2]},
@@ -422,14 +412,7 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
             ),
         ),
         (
-            Network(
-                3,
-                [
-                    (0, 1, 10, 0),
-                    (1, 2, 20, 0),
-                    (2, 1, 50, 1),
-                ],
-            ),
+            Network(3, [(0, 1, 10, 0), (1, 2, 20, 0)]) + Network(3, [(2, 1, 50, 1)]),
             [
                 {"delay": 3, "line": 0, "stations": [0, 1]},
                 {"delay": 2, "line": 0, "stations": [1, 2]},
