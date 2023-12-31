@@ -10,13 +10,18 @@ class Network:
 
     Attributes
     ----------
-    matrix : List[List[int]]
+    matrix : list[list[int]]
         Adjacency matrix of the network.
 
-    edge: List[tuple()]
+    edge: list[tuple()]
         Each edge information in a network is stored as a tuple in a list.
         The content of a tuple is (v1, v2, w, id) where v1 and v2 are two stations,
         w is the weight(travel time) between them and id is what line this edge belongs to.
+    
+    edges_record : dict[tuple[int, int], list[tuple(int, int)]
+        Dictionary where:
+            - Keys are tuples representing (station1, station2) pairs.
+            - Values are lists of tuples representing (travel time, line_id) pairs.
     """
 
     def __init__(self, n_stations, list_of_edges):
@@ -24,13 +29,18 @@ class Network:
         self.matrix = np.zeros((n_stations, n_stations), dtype=int)
         # List of edges
         self.edges = []
+        # This dictionary is used to record all edges 
+        self.edges_record = {}
         for edge in list_of_edges:
             self.edges.append(
                 (edge[0], edge[1], edge[2], edge[3])
             )  # edge[3] is the identifier of a line
             self.matrix[edge[0], edge[1]] = edge[2]
             self.matrix[edge[1], edge[0]] = edge[2]
-
+            # Make sure that we store the edges
+            self.edges_record.setdefault((edge[0], edge[1]), []).append((edge[2], edge[3]))
+            self.edges_record.setdefault((edge[1], edge[0]), []).append((edge[2], edge[3]))
+            
     @property
     def n_nodes(self) -> int:
         """
@@ -74,6 +84,7 @@ class Network:
         
         integrated_network_edges = self.edges.copy()
         integrated_network = Network(self.n_nodes, integrated_network_edges)
+        integrated_network.edges_record = self.edges_record.copy()
 
         for other_edge in other.edges:
             same_found = False
@@ -85,17 +96,30 @@ class Network:
                     self_edge[1],
                 ) == (other_edge[1], other_edge[0]):
                     if self_edge[2] > other_edge[2]:
+                        # Replace it with faster one
                         integrated_network.edges[i] = other_edge
+                        integrated_network.matrix[other_edge[0]][
+                                other_edge[1]
+                            ] = other_edge[2]
+                        integrated_network.matrix[other_edge[1]][
+                            other_edge[0]
+                        ] = other_edge[2]
                     same_found = True
                     break
             if not same_found:
+                # New edge is added when no matching
                 integrated_network.edges.append(other_edge)
-
-        integrated_network.matrix = np.where(
-            (self.matrix != 0) & (other.matrix != 0),
-            np.minimum(self.matrix, other.matrix),
-            self.matrix + other.matrix,
-        )
+                integrated_network.matrix[other_edge[0]][other_edge[1]] = other_edge[2]
+                integrated_network.matrix[other_edge[1]][other_edge[0]] = other_edge[2]
+        
+        # Update the edges_record attribute from 'other' matrix
+        for edge_key, time_and_lineid in other.edges_record.items():
+            if edge_key in integrated_network.edges_record:
+                # Add new tuple to exsiting edge_key's value
+                integrated_network.edges_record[edge_key].extend(time_and_lineid)
+                integrated_network.edges_record[edge_key].sort(key=lambda i: i[0]) # Sort by the travel time
+            else:
+                integrated_network.edges_record[edge_key] = time_and_lineid
 
         return integrated_network
 
