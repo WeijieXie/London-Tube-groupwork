@@ -151,7 +151,7 @@ def get_entire_network():
     return entire_network
 
 
-def network_of_given_day(date):
+def network_of_given_day(date = None):
     """
     Retrieve the whole information of the given day and construct a Network object based on the
     disruption information.
@@ -231,7 +231,10 @@ def convert_indices_to_names(station_indices):
         A list of corresponding names
     """
 
+
+
     dict_indices_names, _, _= query_station_all_info()
+
     # Unexsited station is marked
     result = [
         dict_indices_names.get(index, "Unexisted station index")
@@ -261,4 +264,6 @@ def convert_names_to_indices(station_names):
     result = [dict_names_indices.get(name.lower(), -1) for name in station_names]
 
     return result
+
+
 
