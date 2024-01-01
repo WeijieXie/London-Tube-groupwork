@@ -5,3 +5,6 @@ build
 londontube/__pycache__
 .vscode
 londontube/query/__pycache__
+tests/__pycache__
+.pytest_cache
+draft.ipynb

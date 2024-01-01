@@ -1,0 +1,6 @@
+station index,station name,latitude,longitude
+0,a,-1,0
+1,b,0,0
+2,c,1,0
+3,d,0,1
+4,e,0,-1
