@@ -1,5 +1,5 @@
 name: London Tube - Group 12
- 
+
 on:
   push:
     branches: [ main ]
@@ -12,18 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2 
+    - uses: actions/checkout@v2
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.10' 
+        python-version: '3.10'
 
-    - name: Install dependencies
+    - name: Install Poetry
       run: |
-        pip install -e .[dev]  # Install package + dev dependencies from pyproject.toml
-        pip install pytest
+        pip install poetry
 
-
-    - name: Test with pytest
+    - name: Install dependencies with Poetry
       run: |
-        pytest
+        poetry config virtualenvs.create false
+        poetry install
+
+    - name: Run tests with pytest
+      run: |
+        poetry run pytest
+
