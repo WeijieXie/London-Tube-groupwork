@@ -21,6 +21,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -e .[dev]  # Install package + dev dependencies from pyproject.toml
+        pip install pytest
+
 
     - name: Test with pytest
       run: |
