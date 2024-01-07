@@ -17,5 +17,5 @@ pytest = "^7.4.3"
 
 [tool.setuptools.packages.find]
 include = ["londontube", "tests"]
-exclude = ["tests", "docs"]
+exclude = ["docs"]
 
