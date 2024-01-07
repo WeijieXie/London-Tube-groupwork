@@ -16,6 +16,6 @@ numpy = "^1.24.3"
 pytest = "^7.4.3"
 
 [tool.setuptools.packages.find]
-include = ["londontube", "tests"]
+include = ["londontube"，"londontube.*", "tests", "tests*"]
 exclude = ["docs"]
 
