@@ -11,7 +11,7 @@ def sample_edges():
         (1, 0, 10, 0),
         (1, 2, 20, 0),
         (1, 3, 30, 1),
-        (1, 4, 40, 1),
+        (0, 2, 40, 1),
         (1, 2, 50, 2),
     ]
 
@@ -20,8 +20,7 @@ def sample_edges():
 def sample_network(sample_edges):
     ''' Setup sample network '''
     # Setting up a small network to use in the tests
-    n_stations = 5
-    yield Network(n_stations, sample_edges)
+    yield Network(4, sample_edges)
 
 
 class TestInit:
@@ -29,8 +28,8 @@ class TestInit:
 
     def test_init_positive(self, sample_edges):
         ''' Test positive init - we don't use the sample_network fixture directly since that depends on __add__'''
-        network = Network(5, sample_edges)
-        assert network.n_nodes == 5  # Check if nodes are correctly set
+        network = Network(4, sample_edges)
+        assert network.n_nodes == 4  # Check if nodes are correctly set
         # Check if edges are correctly set
         assert set(network.edges) == set(sample_edges)
         assert len(network.edges) == len(sample_edges)
@@ -38,11 +37,10 @@ class TestInit:
             network.matrix,
             np.array(
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 20, 30, 40],
-                    [0, 20, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    [0, 10, 40, 0],
+                    [10, 0, 20, 30],
+                    [40, 20, 0, 0],
+                    [0, 30, 0, 0],
                 ]
             ),
         )
@@ -122,7 +120,7 @@ class TestInit:
                     (1, 2): [(20, 0), (50, 0)],
                 }
             ),
-            # Different lines, all added but matrix updated
+            # Different lines, all added but matrix unchanged
             (
                 [
                     [(1, 0, 10, 0), (1, 2, 50, 0)],
@@ -157,84 +155,187 @@ class TestInit:
         assert str(e_info.value) == "Networks cannot be combined with n_stations 1 and 2"
 
 
-@ pytest.mark.parametrize(
-    "disruptions_info,network_expected",
-    [
-        (
-            (0, 1, 2),
-            np.array(
+class TestDisruptions:
+    ''' Tests for disruption functions '''
+    @ pytest.mark.parametrize(
+        "disruptions_info, network_expected, edges_expected",
+        [
+            (
+                # Line 0 at station 1 -> both edges increased
+                (0, 1, 2),
+                np.array(
+                    [
+                        [0, 20, 40, 0],
+                        [20, 0, 40, 30],
+                        [40, 40, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 20, 0, 0, 0],
-                    [20, 0, 40, 30, 40],
-                    [0, 40, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 20, 0),
+                    (1, 2, 40, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
                 ]
             ),
-        ),
-        (
-            (0, 2, 3),
-            np.array(
+            (
+                # Line 0 at station 2 by 3 -> line 2 is now quicker
+                (0, 2, 3),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 50, 30],
+                        [40, 50, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 50, 30, 40],
-                    [0, 50, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 10, 0),
+                    (1, 2, 60, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
                 ]
             ),
-        ),
-    ],
-)
-def delay_to_specific_line_one_station(
-    sample_network, disruptions_info, network_expected
-):
-    sample_network.delay_to_specific_line_one_station(*disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
+            (
+                # Line 0 at station 1 by 1 -> nothing happens
+                (0, 1, 1),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 30],
+                        [40, 20, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
+                ]
+            ),
+            (
+                # Line 2 at station 0 -> nothing happens
+                (2, 0, 3),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 30],
+                        [40, 20, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
+                ]
+            ),
+        ],
+    )
+    def delay_to_specific_line_one_station(
+        self, sample_network, disruptions_info, network_expected, edges_expected
+    ):
+        ''' Test specific line to one station '''
+        sample_network.delay_to_specific_line_one_station(*disruptions_info)
+        assert np.array_equal(sample_network.matrix, network_expected)
+        assert set(sample_network.edges) == set(edges_expected)
+        assert len(sample_network.edges) == len(edges_expected)
 
-
-@ pytest.mark.parametrize(
-    "disruptions_info,network_expected",
-    [
-        (
-            (1, 1, 3, 2),
-            np.array(
+    @ pytest.mark.parametrize(
+        "disruptions_info, network_expected, edges_expected",
+        [
+            (
+                # Line 1 between stations 1&3 -> time increased
+                (1, 1, 3, 2),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 60],
+                        [40, 20, 0, 0],
+                        [0, 60, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 20, 60, 40],
-                    [0, 20, 0, 0, 0],
-                    [0, 60, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 60, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
                 ]
             ),
-        ),
-        (
-            (0, 2, 1, 3),
-            np.array(
+            (
+                # Line 0 between stations 1&2 -> time increased, other line now faster
+                (0, 2, 1, 3),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 50, 30],
+                        [40, 50, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 50, 30, 40],
-                    [0, 50, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 10, 0),
+                    (1, 2, 60, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
                 ]
             ),
-        ),
-    ],
-)
-def test_delay_to_specific_line_between_stations(
-    sample_network, disruptions_info, network_expected
-):
-    sample_network.delay_to_specific_line_between_stations(*disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
+            (
+                # Line 1 between stations 1&2 -> nothing happens
+                (1, 2, 1, 3),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 30],
+                        [40, 20, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
+                ]
+            ),
+            (
+                # Line 1 between stations 0&3 -> nothing happens
+                (1, 0, 3, 3),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 30],
+                        [40, 20, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
+                ]
+            ),
+        ],
+    )
+    def test_delay_to_specific_line_between_stations(
+        self, sample_network, disruptions_info, network_expected, edges_expected
+    ):
+        """ Test delay to specific line and stations """
+        sample_network.delay_to_specific_line_between_stations(*disruptions_info)
+        assert np.array_equal(sample_network.matrix, network_expected)
+        assert set(sample_network.edges) == set(edges_expected)
+        assert len(sample_network.edges) == len(edges_expected)
 
 
 @ pytest.mark.parametrize(
