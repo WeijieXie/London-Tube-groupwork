@@ -337,144 +337,168 @@ class TestDisruptions:
         assert set(sample_network.edges) == set(edges_expected)
         assert len(sample_network.edges) == len(edges_expected)
 
+    @ pytest.mark.parametrize(
+        "disruptions_info, network_expected, edges_expected",
+        [
+            (
+                (3, 2),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 60],
+                        [40, 20, 0, 0],
+                        [0, 60, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 60, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
+                ]
+            ),
+            (
+                (2, 3),
+                np.array(
+                    [
+                        [0, 10, 80, 0],
+                        [10, 0, 60, 30],
+                        [80, 60, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 10, 0),
+                    (1, 2, 60, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 80, 1),
+                    (1, 2, 150, 2),
+                ]
+            ),
+            (
+                (1, 3),
+                np.array(
+                    [
+                        [0, 30, 40, 0],
+                        [30, 0, 60, 90],
+                        [40, 60, 0, 0],
+                        [0, 90, 0, 0],
+                    ]
+                ),
+                [
+                    (1, 0, 30, 0),
+                    (1, 2, 60, 0),
+                    (1, 3, 90, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
+                ]
+            ),
+        ],
+    )
+    def test_delay_to_entire_one_station(
+        self, sample_network, disruptions_info, network_expected, edges_expected
+    ):
+        """ Test delay to entire one station """
+        sample_network.delay_to_entire_one_station(*disruptions_info)
+        assert np.array_equal(sample_network.matrix, network_expected)
+        assert set(sample_network.edges) == set(edges_expected)
+        assert len(sample_network.edges) == len(edges_expected)
 
-@ pytest.mark.parametrize(
-    "disruptions_info,network_expected",
-    [
-        (
-            (3, 2),
-            np.array(
+    @ pytest.mark.parametrize(
+        "disruptions_info, network_expected, edges_expected",
+        [
+            (
+                (1, 3, 2),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 20, 60],
+                        [40, 20, 0, 0],
+                        [0, 60, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 20, 60, 40],
-                    [0, 20, 0, 0, 0],
-                    [0, 60, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 10, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 60, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 50, 2),
                 ]
             ),
-        ),
-        (
-            (2, 3),
-            np.array(
+            (
+                (2, 1, 3),
+                np.array(
+                    [
+                        [0, 10, 40, 0],
+                        [10, 0, 60, 30],
+                        [40, 60, 0, 0],
+                        [0, 30, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 60, 30, 40],
-                    [0, 60, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 10, 0),
+                    (1, 2, 60, 0),
+                    (1, 3, 30, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 150, 2),
                 ]
             ),
-        ),
-        (
-            (1, 3),
-            np.array(
-                [
-                    [0, 30, 0, 0, 0],
-                    [30, 0, 60, 90, 120],
-                    [0, 60, 0, 0, 0],
-                    [0, 90, 0, 0, 0],
-                    [0, 120, 0, 0, 0],
-                ]
-            ),
-        ),
-    ],
-)
-def test_delay_to_entire_one_station(
-    sample_network, disruptions_info, network_expected
-):
-    sample_network.delay_to_entire_one_station(*disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
+        ],
+    )
+    def test_delay_to_entire_between_stations(
+        self, sample_network, disruptions_info, network_expected, edges_expected
+    ):
+        """ Test delay to entire between stations """
+        sample_network.delay_to_entire_between_stations(*disruptions_info)
+        assert np.array_equal(sample_network.matrix, network_expected)
+        assert set(sample_network.edges) == set(edges_expected)
+        assert len(sample_network.edges) == len(edges_expected)
 
-
-@ pytest.mark.parametrize(
-    "disruptions_info,network_expected",
-    [
-        (
-            (1, 3, 2),
-            np.array(
+    @ pytest.mark.parametrize(
+        "disruptions_info, network_expected, edges_expected",
+        [
+            (
+                [1],
+                np.array(
+                    [
+                        [0, 0, 40, 0],
+                        [0, 0, 0, 0],
+                        [40, 0, 0, 0],
+                        [0, 0, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 20, 60, 40],
-                    [0, 20, 0, 0, 0],
-                    [0, 60, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 0, 0),
+                    (1, 2, 0, 0),
+                    (1, 3, 0, 1),
+                    (0, 2, 40, 1),
+                    (1, 2, 0, 2),
                 ]
             ),
-        ),
-        (
-            (2, 1, 3),
-            np.array(
+            (
+                [0, 3, 4],
+                np.array(
+                    [
+                        [0, 0, 0, 0],
+                        [0, 0, 20, 0],
+                        [0, 20, 0, 0],
+                        [0, 0, 0, 0],
+                    ]
+                ),
                 [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 60, 30, 40],
-                    [0, 60, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
+                    (1, 0, 0, 0),
+                    (1, 2, 20, 0),
+                    (1, 3, 0, 1),
+                    (0, 2, 0, 1),
+                    (1, 2, 0, 2),
                 ]
             ),
-        ),
-    ],
-)
-def test_delay_to_entire_between_stations(
-    sample_network, disruptions_info, network_expected
-):
-    sample_network.delay_to_entire_between_stations(*disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
-
-
-@ pytest.mark.parametrize(
-    "disruptions_info,network_expected",
-    [
-        (
-            [1],
-            np.array(
-                [
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                ]
-            ),
-        ),
-        (
-            [2],
-            np.array(
-                [
-                    [0, 10, 0, 0, 0],
-                    [10, 0, 0, 30, 40],
-                    [0, 0, 0, 0, 0],
-                    [0, 30, 0, 0, 0],
-                    [0, 40, 0, 0, 0],
-                ]
-            ),
-        ),
-        (
-            [0, 3, 4],
-            np.array(
-                [
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 20, 0, 0],
-                    [0, 20, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0],
-                ]
-            ),
-        ),
-    ],
-)
-def test_delay_to_closure(sample_network, disruptions_info, network_expected):
-    sample_network.delay_to_closure(disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
+        ],
+    )
+    def test_delay_to_closure(self, sample_network, disruptions_info, network_expected, edges_expected):
+        """ Test functionality of delay_to_closure """
+        sample_network.delay_to_closure(disruptions_info)
+        assert np.array_equal(sample_network.matrix, network_expected)
+        assert set(sample_network.edges) == set(edges_expected)
+        assert len(sample_network.edges) == len(edges_expected)
