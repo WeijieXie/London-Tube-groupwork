@@ -18,5 +18,5 @@ matplotlib = "^3.8.1"
 
 [tool.setuptools.packages.find]
 include = ["londontube","londontube.*"]
-exclude = ["tests", "tests*"，"docs"]
+exclude = ["tests"， "tests*"，"docs"]
 
