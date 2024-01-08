@@ -8,6 +8,13 @@ dependencies = [
     "matplotlib>=3.8.1"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "commitizen>=3.13.0",
+    "pytest>=7.4.4",
+    "pytest-cov>=4.1.0"
+]
+
 [project.scripts]
 journey-planner = "londontube.command:main"
 
@@ -18,3 +25,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["londontube", "londontube.*"]
 exclude = ["tests", "tests*", "docs"]
+
+[tool.coverage.run]
+omit = [
+    "*__init__.py",
+    "tests/*"
+]
