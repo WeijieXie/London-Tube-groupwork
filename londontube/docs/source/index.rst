@@ -10,8 +10,7 @@ Welcome to londontube's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   content/network
-   content/query
+   modules
 
 
 Indices and tables
