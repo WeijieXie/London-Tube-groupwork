@@ -282,6 +282,52 @@ class Network:
 
         This method stops when all n-distant neighbor nodes have been found, to save computation time.
 
+        Examples
+        --------
+        >>> network = Network(9, [])
+        >>> matrix = np.array([
+        ...     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+        ...     [1, 0, 2, 0, 4, 0, 0, 0, 0],
+        ...     [0, 2, 0, 8, 0, 0, 0, 0, 0],
+        ...     [0, 0, 8, 0, 1, 0, 0, 0, 0],
+        ...     [0, 4, 0, 1, 0, 0, 0, 0, 0],
+        ...     [0, 0, 0, 0, 0, 0, 5, 9, 0],
+        ...     [0, 0, 0, 0, 0, 5, 0, 2, 0],
+        ...     [0, 0, 0, 0, 0, 9, 2, 0, 0],
+        ...     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ... ])
+        >>> network.matrix = matrix
+        >>> network.n_nodes = 9
+
+        # Test for 1-distant neighbors
+        >>> network.distant_neighbours(1, 0)
+        [1]
+        >>> network.distant_neighbours(1, 1)
+        [0, 2, 4]
+
+        # Test for 2-distant neighbors
+        >>> network.distant_neighbours(2, 0)
+        [1, 2, 4]
+
+        # Test for nodes with no neighbors
+        >>> network.distant_neighbours(1, 8)
+        []
+
+        # Test for isolated sub-network
+        >>> network.distant_neighbours(1, 5)
+        [6, 7]
+
+        # Error handling: n <= 0
+        >>> network.distant_neighbours(-1, 0)
+        Traceback (most recent call last):
+            ...
+        ValueError: n must be > 0
+
+        # Error handling: v out of range
+        >>> network.distant_neighbours(1, 10)
+        Traceback (most recent call last):
+            ...
+        IndexError: v must satisfy 0 <= v < n_nodes (9)
         """
         # Check v in range
         if not 0 <= v < self.n_nodes:
