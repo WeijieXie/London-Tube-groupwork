@@ -255,7 +255,7 @@ class Network:
             if n <= 0
 
         Notes
-        -------
+        -----
         This method uses the well-known Breadth-First Search (BFS) to find nth-order neighbors in the network.
 
         A queue is used to 'visit' first the initial node, then its neighbours and their neighbors, and so on iteratively,
