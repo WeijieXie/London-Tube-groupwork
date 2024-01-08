@@ -28,7 +28,8 @@ author = 'Yu Fan, Taliah Horner, Artemis Song, Harry Xie, Zihao Zhou'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    'numpydoc',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
