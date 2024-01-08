@@ -11,7 +11,7 @@ Introduction
 londontube is a Python package designed for analyzing and planning routes in the London Underground network. It accounts for real-time service disruptions, providing an invaluable tool for both daily commuters and transport planners.
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    londontube
@@ -27,6 +27,10 @@ To install londontube, navigate to the package's root directory in your terminal
     pip install .
 
 This command installs londontube along with all necessary dependencies.
+
+Example Workflow
+^^^^^^^^^^^^^^^^
+This section demonstrates a basic use case of londontube - planning a journey considering service disruptions. Step-by-step instructions guide users through the process.
 
 CLI Usage
 ^^^^^^^^^
