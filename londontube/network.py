@@ -15,17 +15,10 @@ class Network:
     matrix : list[list[int]]
         Adjacency matrix of the network.
 
-    edges: list[tuple(int, int, int, int)]
-        Each edge information in a network is stored as a tuple in a list.
-        The content of a tuple is (station1, station2, weight, line) where:
-            station1&2 - stations the edge represents travel between
-            w - the weight, in this case travel time of the journey
-            line - the line the journey belongs to
-
-    edges_record : dict[tuple(int, int), list[tuple(int, int)]
+    edges : dict[tuple(int, int), list[tuple(int, int)]
         Dictionary where:
             - Keys are tuples representing (station1, station2) pairs.
-            - Values are lists of tuples representing (travel time, line_id) pairs.
+            - Values are lists of lists representing [travel time, line_id] pairs.
     """
 
     def __init__(self, n_stations, edges):
@@ -66,32 +59,15 @@ class Network:
 
         # The adjacency matrix
         self.matrix = np.zeros((n_stations, n_stations), dtype=int)
-        # List of edges
-        self.edges = []
-        # This dictionary is used to record all edges
-        self.edges_record = {}
-        for edge in edges:
-            self.edges.append(
-                (edge[0], edge[1], edge[2], edge[3])
-            )  # edge[3] is the identifier of a line
-            self.matrix[edge[0], edge[1]] = edge[2]
-            self.matrix[edge[1], edge[0]] = edge[2]
-            # Make sure that we store the edges
-            self.edges_record.setdefault((edge[0], edge[1]), []).append(
-                (edge[2], edge[3])
-            )
-            self.edges_record.setdefault((edge[1], edge[0]), []).append(
-                (edge[2], edge[3])
-            )
 
         # This dictionary is used to record all edges
         # We always use x < y in the key which allows easy assigning to matrix values
-        self.th_edges = {key: [] for key in [((x, y)) for y in range(n_stations) for x in range(y)]}
+        self.edges = {key: [] for key in [((x, y)) for y in range(n_stations) for x in range(y)]}
 
         for edge in edges:
             self.add_edge(edge)
 
-    @property
+    @ property
     def n_nodes(self) -> int:
         """
         Return the number of nodes in the network.
@@ -138,47 +114,13 @@ class Network:
             raise ValueError(f"Networks cannot be combined with n_nodes {self.n_nodes} and {other.n_nodes}")
 
         # Combined network
+        integrated_network = Network(self.n_nodes, [])
+        integrated_network.matrix = self.matrix.copy()
+        integrated_network.edges = self.edges.copy()
 
-        integrated_network_edges = self.edges.copy()
-        integrated_network = Network(self.n_nodes, integrated_network_edges)
-        integrated_network.edges_record = self.edges_record.copy()
-
-        for other_edge in other.edges:
-            same_found = False
-            for i, self_edge in enumerate(integrated_network.edges):
-                # The graph is bidirectional.
-                # Check for two conditions where the same edge appears.
-                if (self_edge[0], self_edge[1]) == (other_edge[0], other_edge[1]) or (
-                    self_edge[0],
-                    self_edge[1],
-                ) == (other_edge[1], other_edge[0]):
-                    if self_edge[2] > other_edge[2]:
-                        # Replace it with faster one
-                        integrated_network.edges[i] = other_edge
-                        integrated_network.matrix[other_edge[0]][
-                            other_edge[1]
-                        ] = other_edge[2]
-                        integrated_network.matrix[other_edge[1]][
-                            other_edge[0]
-                        ] = other_edge[2]
-                    same_found = True
-                    break
-            if not same_found:
-                # New edge is added when no matching
-                integrated_network.edges.append(other_edge)
-                integrated_network.matrix[other_edge[0]][other_edge[1]] = other_edge[2]
-                integrated_network.matrix[other_edge[1]][other_edge[0]] = other_edge[2]
-
-        # Update the edges_record attribute from 'other' matrix
-        for edge_key, time_and_lineid in other.edges_record.items():
-            if edge_key in integrated_network.edges_record:
-                # Add new tuple to exsiting edge_key's value
-                integrated_network.edges_record[edge_key].extend(time_and_lineid)
-                integrated_network.edges_record[edge_key].sort(
-                    key=lambda i: i[0]
-                )  # Sort by the travel time
-            else:
-                integrated_network.edges_record[edge_key] = time_and_lineid
+        for key, all_lines in other.edges.items():
+            for edge_line in all_lines:
+                integrated_network.add_edge(key + tuple(edge_line))
 
         return integrated_network
 
@@ -199,7 +141,7 @@ class Network:
         # Ensure x < y
         pair = tuple(set(edge[:2]))
         value = edge[2:]
-        all_lines = self.th_edges[pair]
+        all_lines = self.edges[pair]
 
         # If the new edge is 0, there is nothing to do
         if edge[2] == 0:
@@ -260,321 +202,35 @@ class Network:
 
         for pair in station_pairs:
             # Continue if no edges
-            if self.th_edges[pair] == []:
+            if self.edges[pair] == []:
                 continue
 
             # Update weights of edges on the line, or all edges if no line provided
-            self.th_edges[pair] = [(weight * delay if line_idx in [None, line] else weight, line)
-                                   for weight, line in self.th_edges[pair]]
+            self.edges[pair] = [(weight * delay if line_idx in [None, line] else weight, line)
+                                for weight, line in self.edges[pair]]
 
             # Remove edges with weight 0
-            self.th_edges[pair] = [edge for edge in self.th_edges[pair] if edge[0] != 0]
+            self.edges[pair] = [edge for edge in self.edges[pair] if edge[0] != 0]
 
             # If no edges remain, set the matrix points to 0 and continue
-            if self.th_edges[pair] == []:
+            if self.edges[pair] == []:
                 self.matrix[pair] = 0
                 self.matrix[pair[::-1]] = 0
                 continue
 
             # Move the fastest to the front
             fastest = []
-            for i, edge in enumerate(self.th_edges[pair]):
+            for i, edge in enumerate(self.edges[pair]):
                 # If new fastest and non-zero then move to front
                 if not fastest or edge[0] < fastest[0]:
                     print(edge)
                     fastest = [edge[0], i]
 
-            self.th_edges[pair].insert(0, self.th_edges[pair].pop(fastest[1]))
+            self.edges[pair].insert(0, self.edges[pair].pop(fastest[1]))
 
             # Assign to the matrix
-            self.matrix[pair] = self.th_edges[pair][0][0]
-            self.matrix[pair[::-1]] = self.th_edges[pair][0][0]
-
-    # The first disruption type
-    def delay_to_specific_line_one_station(
-        self, line_idx, station_idx, delay_multiplier
-    ):
-        """
-        It is one type of disruptions that one station in a line is delayed.
-        Thus, all stations that connected to this station in the line are delayed.
-
-        Parameters
-        ----------
-        line_idx : int
-            The index here is the number that represents the delayed line
-        station_idx : int
-            The index of one affected station
-        delay_multiplier : int
-            The travel time(weight) is multiplied by this factor
-        """
-
-        for i, edge in enumerate(self.edges):
-            # Check which edge in the network correspond to this line and the affected statioin
-            if edge[3] == line_idx and (
-                edge[0] == station_idx or edge[1] == station_idx
-            ):
-                updated_weight = int(edge[2] * delay_multiplier)
-                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
-                self.matrix[edge[0], edge[1]] = updated_weight
-                self.matrix[edge[1], edge[0]] = updated_weight
-
-                # Update the corresponding edge in edge_record with new weight
-                self.edges_record[(edge[0], edge[1])] = [
-                    (updated_weight, edge[3]) if line == edge[3] else (weight, line)
-                    for weight, line in self.edges_record.get((edge[0], edge[1]), [])
-                ]
-                self.edges_record[(edge[1], edge[0])] = [
-                    (updated_weight, edge[3]) if line == edge[3] else (weight, line)
-                    for weight, line in self.edges_record.get((edge[1], edge[0]), [])
-                ]
-
-        # Find alternative paths that do not use the disrupted station as an endpoint
-        for (station1, station2), time_plus_lineid in self.edges_record.items():
-            if station_idx not in (station1, station2):
-                continue
-
-            # Get the edges that are not affected by delay
-            not_affected_edges = [
-                (weight, line) for weight, line in time_plus_lineid if line != line_idx
-            ]
-            if not not_affected_edges:
-                continue
-
-            # Choose the fastest alternative edge which is not from the disrupted line
-            fastest_alternative = min(not_affected_edges, key=lambda tuple: tuple[0])
-
-            # Update the matrix and edges list with the fastest alternative
-            # If the fastest alternative is better than the affected travel time
-            if self.matrix[station1][station2] > fastest_alternative[0]:
-                self.matrix[station1][station2] = fastest_alternative[0]
-                self.matrix[station2][station1] = fastest_alternative[0]
-                for i, edge in enumerate(self.edges):
-                    if {edge[0], edge[1]} == {station1, station2}:
-                        self.edges[i] = (
-                            station1,
-                            station2,
-                            fastest_alternative[0],
-                            fastest_alternative[1],
-                        )
-
-    # The second disruption type
-    def delay_to_specific_line_between_stations(
-        self, line_idx, station1_idx, station2_idx, delay_multiplier
-    ):
-        """
-        This function is applied to a situation where connection between two stations on a line is delayed.
-        Thus the travel time between these two stations on that line increases.
-
-        Parameters
-        ----------
-        line_idx : int
-            The index of the line
-        station1_idx : int
-            The index of the station1
-        station2_idx : int
-            The index of the station2
-        delay_multiplier : int
-            The travel time(weight) is multiplied by this factor
-        """
-
-        for i, edge in enumerate(self.edges):
-            if edge[3] == line_idx and (
-                (edge[0] == station1_idx and edge[1] == station2_idx)
-                or (edge[0] == station2_idx and edge[1] == station1_idx)
-            ):
-                updated_weight = int(edge[2] * delay_multiplier)
-                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
-                self.matrix[edge[0], edge[1]] = updated_weight
-                self.matrix[edge[1], edge[0]] = updated_weight
-
-                # Update edges_record with the new weight
-                if (edge[0], edge[1]) in self.edges_record:
-                    self.edges_record[(edge[0], edge[1])] = [
-                        (updated_weight, edge[3]) if line == edge[3] else (weight, line)
-                        for weight, line in self.edges_record[(edge[0], edge[1])]
-                    ]
-                if (edge[1], edge[0]) in self.edges_record:
-                    self.edges_record[(edge[1], edge[0])] = [
-                        (updated_weight, edge[3]) if line == edge[3] else (weight, line)
-                        for weight, line in self.edges_record[(edge[1], edge[0])]
-                    ]
-
-        # Re-evaluate the edges after delay is applied
-
-        # Get the edges that has the connection between station1 and 2
-        related_edges = self.edges_record.get(
-            (station1_idx, station2_idx), []
-        ) + self.edges_record.get((station2_idx, station1_idx), [])
-
-        # Get the edges that are not affected by this specific line delay
-        not_affected_edges = [
-            (weight, line) for weight, line in related_edges if line != line_idx
-        ]
-
-        if not_affected_edges:
-            # Choose the fastest alternative edge
-            fastest_alternative = min(not_affected_edges, key=lambda tuple: tuple[0])
-
-            # Update the matrix and edges list if fastest alternative is better
-            if self.matrix[station1_idx][station2_idx] > fastest_alternative[0]:
-                self.matrix[station1_idx][station2_idx] = fastest_alternative[0]
-                self.matrix[station2_idx][station1_idx] = fastest_alternative[0]
-                for i, (v1, v2, _, _) in enumerate(self.edges):
-                    if {v1, v2} == {station1_idx, station2_idx}:
-                        self.edges[i] = (
-                            station1_idx,
-                            station2_idx,
-                            fastest_alternative[0],
-                            fastest_alternative[1],
-                        )
-
-    # The third disruption type
-    def delay_to_entire_one_station(self, station_idx, delay_multiplier):
-        """
-        This function is applied to a situation where one station is delayed for the entire network.
-        Thus the connections of each line that contains this station is delayed.
-
-
-        Parameters
-        ----------
-        station_idx : int
-            The index of the affected station
-        delay_multiplier : int
-            The travel time(weight) is multiplied by this factor
-        """
-
-        for i, edge in enumerate(self.edges):
-            if edge[0] == station_idx or edge[1] == station_idx:
-                updated_weight = int(edge[2] * delay_multiplier)
-                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
-                self.matrix[edge[0], edge[1]] = updated_weight
-                self.matrix[edge[1], edge[0]] = updated_weight
-
-        for stations, time_plus_lineid in self.edges_record.items():
-            if station_idx in stations:
-                self.edges_record[stations] = [
-                    (weight * delay_multiplier, line)
-                    for weight, line in self.edges_record[stations]
-                ]
-
-        # Re-evaluate the edges after delay is applied
-
-        for (station1, station2), time_plus_lineid in self.edges_record.items():
-            if station_idx in (station1, station2):
-                # Find the fast alternative
-                fastest_alternative = min(time_plus_lineid, key=lambda tuple: tuple[0])
-
-                # Update the matrix if fastest_alternative is better
-                if self.matrix[station1][station2] > fastest_alternative[0]:
-                    self.matrix[station1][station2] = fastest_alternative[0]
-                    self.matrix[station2][station1] = fastest_alternative[0]
-
-                    # Update edge list
-                    for i, edge in enumerate(self.edges):
-                        if {edge[0], edge[1]} == {station1, station2}:
-                            self.edges[i] = (
-                                station1,
-                                station2,
-                                fastest_alternative[0],
-                                fastest_alternative[1],
-                            )
-
-        # Re-evaluate the edges after delay is applied
-        for (station1, station2), time_plus_lineid in self.edges_record.items():
-            if station_idx in (station1, station2):
-                fastest_alternative = min(time_plus_lineid, key=lambda tuple: tuple[0])
-                # Update the matrix if a better path is found
-                if self.matrix[station1][station2] > fastest_alternative[0]:
-                    self.matrix[station1][station2] = fastest_alternative[0]
-                    self.matrix[station2][station1] = fastest_alternative[0]
-                    for i, edge in enumerate(self.edges):
-                        if {edge[0], edge[1]} == {station1, station2}:
-                            self.edges[i] = (
-                                station1,
-                                station2,
-                                fastest_alternative[0],
-                                fastest_alternative[1],
-                            )
-
-    # The fourth disruption type
-    def delay_to_entire_between_stations(
-        self, station1_idx, station2_idx, delay_multiplier
-    ):
-        """
-        This function is applied to a situation where connection between two stations for entire network is delayed.
-        Thus the travel time between these two stations for every line that contains this connection increases.
-
-        Parameters
-        ----------
-        station1_idx : int
-            The index of the first affected station
-        station2_idx : int
-            The index of the second affected station
-        delay_multiplier : int
-            The travel time(weight) is multiplied by this factor
-        """
-
-        for i, edge in enumerate(self.edges):
-            if (edge[0] == station1_idx and edge[1] == station2_idx) or (
-                edge[0] == station2_idx and edge[1] == station1_idx
-            ):
-                updated_weight = int(edge[2] * delay_multiplier)
-                self.edges[i] = (edge[0], edge[1], updated_weight, edge[3])
-                self.matrix[edge[0], edge[1]] = updated_weight
-                self.matrix[edge[1], edge[0]] = updated_weight
-
-        edge_keys = [(station1_idx, station2_idx), (station2_idx, station1_idx)]
-        for edge_key in edge_keys:
-            if edge_key in self.edges_record:
-                self.edges_record[edge_key] = [
-                    (weight * delay_multiplier, line)
-                    for weight, line in self.edges_record[edge_key]
-                ]
-
-        # Re-evaluate the edges after delay is applied
-
-        # Combine edges
-        related_edges = self.edges_record.get(
-            (station1_idx, station2_idx), []
-        ) + self.edges_record.get((station2_idx, station1_idx), [])
-
-        fastest_alternative = min(related_edges, key=lambda tuple: tuple[0])
-
-        # Update the matrix and edges list with the best alternative if it is better than the current connection
-        if self.matrix[station1_idx][station2_idx] > fastest_alternative[0]:
-            self.matrix[station1_idx][station2_idx] = fastest_alternative[0]
-            self.matrix[station2_idx][station1_idx] = fastest_alternative[0]
-            for i, edge in enumerate(self.edges):
-                if {edge[0], edge[1]} == {station1_idx, station2_idx}:
-                    self.edges[i] = (
-                        station1_idx,
-                        station2_idx,
-                        fastest_alternative[0],
-                        fastest_alternative[1],
-                    )
-
-    # The fifth disruption type
-    def delay_to_closure(self, station_list):
-        """
-        When the delay multiplier is 0, that means the station is closed, which affects the whole network.
-
-        Parameters
-        ----------
-        station_list : List
-            A list of closed stations
-        """
-
-        # Keep the edges that are not affected
-        self.edges = [
-            edge
-            for edge in self.edges
-            if edge[0] not in station_list and edge[1] not in station_list
-        ]
-
-        # Set all the weight connected to stations in station to 0
-        for affected_station in station_list:
-            self.matrix[affected_station, :] = 0
-            self.matrix[:, affected_station] = 0
+            self.matrix[pair] = self.edges[pair][0][0]
+            self.matrix[pair[::-1]] = self.edges[pair][0][0]
 
     def distant_neighbours(self, n, v) -> List[int]:
         """

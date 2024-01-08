@@ -1,8 +1,10 @@
-from londontube.network import Network
-import requests
+""" Module handling queries to the disruption API """
 import csv
 from io import StringIO
+import requests
 import pandas as pd
+from londontube.network import Network
+
 
 def check_http_connection():
     """
@@ -13,6 +15,7 @@ def check_http_connection():
         return response.status_code == 200
     except requests.RequestException:
         return False
+
 
 def connectivity_of_line(line_index):
     """
@@ -30,17 +33,17 @@ def connectivity_of_line(line_index):
         Network of a line.
     """
 
-    if check_http_connection() == False:
+    if check_http_connection() is False:
         raise requests.RequestException("poor connection, please check the network")
-    
+
     query_total_info = (
-        f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
+        "https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
     )
-    response = requests.get(query_total_info)
+    response = requests.get(query_total_info, timeout=120)
     total_info = response.json()
 
     query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/line/query?line_identifier={line_index}"
-    response = requests.get(query_web).content.decode("utf-8")
+    response = requests.get(query_web, timeout=120).content.decode("utf-8")
     # Store line csv information
     connectivity_info = csv.reader(StringIO(response))
     # List to store edges
@@ -72,16 +75,16 @@ def disruption_info(date=None):
         A list of dictionary contains disruption information
     """
 
-    if check_http_connection() == False:
+    if check_http_connection() is False:
         raise requests.RequestException("poor connection, please check the network")
 
     # Return today's disruption information if not date provided
-    if date == None:
-        query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query"
+    if date is None:
+        query_web = "https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query"
     else:
-        query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query?date={date}"
+        query_web = "https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query?date={date}"
 
-    response = requests.get(query_web)
+    response = requests.get(query_web, timeout=120)
     disruption_info = response.json()
 
     return disruption_info
@@ -106,32 +109,15 @@ def apply_disruptions(network, disruptions):
         stations_affected = disruption.get("stations", [])
         delay_multiplier = disruption["delay"]
 
-        # One specific line is affected
-        if line is not None:
-                if len(stations_affected) == 1:
-                            network.delay_to_specific_line_one_station(
-                                line, stations_affected[0], delay_multiplier
-                            )
-                # The connection between two stations is affected in one line
-                elif len(stations_affected) == 2:
-                        network.delay_to_specific_line_between_stations(
-                            line, stations_affected[0], stations_affected[1], delay_multiplier
-                        )
-        else:
-            # Line is empty -> Disruption affects the whole line
-            # All connections in the whole network contain one specific station are affected
-            if len(stations_affected) == 1:  #
-                network.delay_to_entire_one_station(
-                    stations_affected[0], delay_multiplier
-                )
-            # All connections contain in the whole network contain two specific stations are affected
-            elif len(stations_affected) == 2:
-                network.delay_to_entire_between_stations(
-                    stations_affected[0], stations_affected[1], delay_multiplier
-                )
-            elif delay_multiplier == 0:
-                network.delay_to_closure(stations_affected)
-            
+        if stations_affected == []:
+            return network
+
+        # Stations is always len 1 or 2
+        station1 = stations_affected[0]
+        station2 = None if len(stations_affected) == 1 else stations_affected[1]
+
+        network.apply_delay(delay_multiplier, station1, station2, line)
+
     return network
 
 
@@ -145,31 +131,25 @@ def get_entire_network():
     Network
         An entire underground network of London
     """
-    if check_http_connection() == False:
+    if check_http_connection() is False:
         raise requests.RequestException("poor connection, please check the network")
-    
+
     # Query the information of the network
     query_total_info = (
-        f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
+        "https://rse-with-python.arc.ucl.ac.uk/londontube-service/index/query"
     )
-    response = requests.get(query_total_info)
+    response = requests.get(query_total_info, timeout=120)
     total_info = response.json()
 
     # The number of lines
     n_lines = int(total_info["n_lines"])
+    n_stations = int(total_info["n_stations"])
 
-    # Set the first line's network as the entire one
-    entire_network = connectivity_of_line(0)
-
-    # Combine the network of each subsequent line
-    for line_idx in range(1, n_lines):
-        line_network = connectivity_of_line(line_idx)
-        entire_network = entire_network + line_network
-
-    return entire_network
+    # Sum the Networks
+    return sum([connectivity_of_line(line_ldx) for line_ldx in range(n_lines)], Network(n_stations, []))
 
 
-def network_of_given_day(date = None):
+def network_of_given_day(date=None):
     """
     Retrieve the whole information of the given day and construct a Network object based on the
     disruption information.
@@ -185,7 +165,7 @@ def network_of_given_day(date = None):
         Network representation of londontube.
     """
 
-    if date != None:
+    if date is not None:
         disruptions = disruption_info(date)
     else:
         disruptions = disruption_info()
@@ -211,11 +191,12 @@ def query_station_all_info():
         The third dictionary gets station index as key and its position(latitude and longitude) as value.
     """
 
-    if check_http_connection() == False:
+    if check_http_connection() is False:
         raise requests.RequestException("poor connection, please check the network")
-    
+
     response = requests.get(
-        "https://rse-with-python.arc.ucl.ac.uk/londontube-service/stations/query?id=all"
+        "https://rse-with-python.arc.ucl.ac.uk/londontube-service/stations/query?id=all",
+        timeout=300
     )
     station_info = pd.read_csv(StringIO(response.text))
 
@@ -253,9 +234,7 @@ def convert_indices_to_names(station_indices):
         A list of corresponding names
     """
 
-
-
-    dict_indices_names, _, _= query_station_all_info()
+    dict_indices_names, _, _ = query_station_all_info()
 
     # Unexsited station is marked
     result = [
@@ -286,6 +265,3 @@ def convert_names_to_indices(station_names):
     result = [dict_names_indices.get(name.lower(), -1) for name in station_names]
 
     return result
-
-
-
