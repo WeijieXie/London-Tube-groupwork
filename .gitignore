@@ -8,3 +8,17 @@ londontube/query/__pycache__
 tests/__pycache__
 .pytest_cache
 draft.ipynb
+
+# Python files
+*__init__*
+*__pycache__*
+venv
+.cz.toml
+.ipynb*
+.coverage
+
+# Misc
+*.swp
+*.tar.gz
+*.pdf
+Session.vim
