@@ -1,6 +1,6 @@
 # tests/test_query.py
-import pytest
 from unittest import mock
+import pytest
 
 import requests
 import numpy as np
@@ -27,9 +27,13 @@ def test_check_http_connection():
         mock.Mock(status_code=500),
     ]
     with mock.patch("requests.get", side_effect=mock_responses) as mock_get:
-        assert check_http_connection() == True
-        assert check_http_connection() == False
-        assert check_http_connection() == False
+        assert check_http_connection() is True
+        assert check_http_connection() is False
+        assert check_http_connection() is False
+        mock_get.assert_called()
+
+    with mock.patch("requests.get", side_effect=requests.RequestException()) as mock_get:
+        assert check_http_connection() is False
         mock_get.assert_called()
 
 
@@ -80,6 +84,13 @@ def test_connectivity_of_line(csv_content, network_expected):
             assert network.matrix.shape == (5, 5)
             assert np.array_equal(network.matrix, network_expected.matrix)
             assert network.n_nodes == 5, "The network should have more than 0 nodes."
+
+
+def test_connectivity_of_line_raises_exception():
+    with mock.patch("londontube.query.query.check_http_connection", return_value=False):
+        with pytest.raises(requests.RequestException) as e_info:
+            connectivity_of_line(0)
+        assert str(e_info.value) == "poor connection, please check the network"
 
 
 # Test the disruption_info function in poor network.
@@ -271,6 +282,13 @@ def test_get_entire_network(line_info, line_net_list, entire_network):
                 ), "The network should have more than 0 nodes."
 
 
+def test_get_entire_network_raises_exception():
+    with mock.patch("londontube.query.query.check_http_connection", return_value=False):
+        with pytest.raises(requests.RequestException) as e_info:
+            get_entire_network()
+        assert str(e_info.value) == "poor connection, please check the network"
+
+
 # test get the network of given day function
 @pytest.mark.parametrize(
     "network_original,disruptions_info,network_expected",
@@ -406,7 +424,7 @@ def test_convert_indices_to_names(station_indices, names_expected):
     "station_names,indices_expected",
     [(["a"], [0]), (["a", "b", "c"], [0, 1, 2]), (["b", "e"], [1, 4])],
 )
-def test_convert_indices_to_names(station_names, indices_expected):
+def test_convert_names_to_indices(station_names, indices_expected):
     with mock.patch(
         "londontube.query.query.query_station_all_info",
         return_value=(
