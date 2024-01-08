@@ -84,153 +84,56 @@ def test_connectivity_of_line(csv_content, network_expected):
 
 # Test the disruption_info function in poor network.
 def test_disruption_info_poor_network():
-    with mock.patch(
-        "londontube.query.query.check_http_connection", return_value=False
-    ) as mock_get:
+    with mock.patch("londontube.query.query.check_http_connection", return_value=False):
         with pytest.raises(requests.RequestException):
             disruption_info()
 
 
+@pytest.fixture()
+def simple_disruption():
+    yield ([
+        {
+            "delay": "1",
+            "line": "1",
+            "stations": ["1", "2"]
+        }]
+    )
+
+
 # Test the disruption_info function for today's disruptions.
-def test_disruption_info_none():
-    disruptions = disruption_info()
-    assert isinstance(disruptions, list), "Disruption info should be a list."
-    if disruptions:  # If there are disruptions today
-        assert all(
-            "line" in d or "stations" in d for d in disruptions
-        ), "Each disruption should have 'line' or 'stations' key."
+def test_disruption_info_none(simple_disruption):
+    with mock.patch("londontube.query.query.check_http_connection", return_value=True):
+        with mock.patch(
+            "requests.get",
+            side_effect=[
+                mock.Mock(
+                    json=mock.Mock(
+                        return_value=simple_disruption
+                    )
+                ),
+            ],
+        ) as mk:
+            print(mk.call_count)
+            disruptions = disruption_info()
+            assert isinstance(disruptions, list), "Disruption info should be a list."
+            assert disruptions == simple_disruption
 
 
-@pytest.mark.parametrize(
-    ("date", "info_list"),
-    [
-        (
-            "2023-01-01",
-            [
-                {"delay": 6, "stations": [242, 266]},
-                {"delay": 3, "line": 1, "stations": [152, 153]},
-                {"delay": 0, "line": 1, "stations": [67, 249]},
-                {"delay": 0, "stations": [133]},
-                {"delay": 0, "stations": [271]},
-                {"delay": 6, "stations": [47, 244]},
-                {"delay": 4, "line": 10, "stations": [271]},
-                {"delay": 0, "line": 10, "stations": [12, 271]},
-                {"delay": 2, "stations": [83, 147]},
-                {"delay": 2, "line": 6, "stations": [215, 217]},
-                {"delay": 4, "line": 10, "stations": [12, 271]},
-                {"delay": 7, "stations": [182, 273]},
-                {"delay": 5, "stations": [12, 271]},
-                {"delay": 7, "stations": [2, 256]},
-                {"delay": 7, "line": 4, "stations": [2, 155]},
-                {"delay": 0, "stations": [248]},
-                {"delay": 9, "line": 7, "stations": [254, 294]},
-                {"delay": 2, "line": 10, "stations": [12, 271]},
-                {"delay": 6, "line": 5, "stations": [141]},
-                {"delay": 1, "line": 7, "stations": [54, 239]},
-                {"delay": 0, "line": 5, "stations": [227, 271]},
-                {"delay": 1, "line": 9, "stations": [144]},
-                {"delay": 0, "line": 2, "stations": [230]},
-                {"delay": 4, "line": 3, "stations": [242, 277]},
-                {"delay": 0, "line": 11, "stations": [41]},
-                {"delay": 8, "stations": [149, 222]},
-                {"delay": 1, "line": 8, "stations": [229, 245]},
-                {"delay": 5, "line": 6, "stations": [167, 210]},
-                {"delay": 6, "line": 1, "stations": [286]},
-                {"delay": 2, "stations": [12]},
-                {"delay": 7, "line": 5, "stations": [42, 281]},
-                {"delay": 0, "line": 2, "stations": [43, 160]},
-                {"delay": 2, "line": 6, "stations": [89, 103]},
+def test_disruption_info_with_date(simple_disruption):
+    with mock.patch("londontube.query.query.check_http_connection", return_value=True):
+        with mock.patch(
+            "requests.get",
+            side_effect=[
+                mock.Mock(
+                    json=mock.Mock(
+                        return_value=simple_disruption
+                    )
+                ),
             ],
-        ),
-        (
-            "2023-08-23",
-            [
-                {"delay": 9, "line": 6, "stations": [10, 93]},
-                {"delay": 6, "stations": [10, 27]},
-                {"delay": 2, "line": 8, "stations": [133]},
-                {"delay": 3, "line": 7, "stations": [37, 80]},
-                {"delay": 5, "line": 10, "stations": [12, 271]},
-                {"delay": 7, "line": 10, "stations": [12, 271]},
-                {"delay": 1, "line": 9, "stations": [194, 266]},
-                {"delay": 3, "line": 3, "stations": [225, 292]},
-                {"delay": 8, "line": 9, "stations": [94, 219]},
-                {"delay": 7, "stations": [188]},
-                {"delay": 4, "stations": [208]},
-                {"delay": 4, "line": 8, "stations": [124, 133]},
-                {"delay": 8, "line": 4, "stations": [100, 109]},
-                {"delay": 2, "line": 1, "stations": [75, 178]},
-                {"delay": 1, "line": 10, "stations": [12, 271]},
-                {"delay": 8, "line": 8, "stations": [125, 218]},
-                {"delay": 6, "line": 8, "stations": [0]},
-                {"delay": 7, "line": 8, "stations": [59]},
-                {"delay": 5, "line": 4, "stations": [35, 281]},
-                {"delay": 5, "line": 8, "stations": [74]},
-                {"delay": 0, "line": 3, "stations": [84, 128]},
-                {"delay": 2, "line": 5, "stations": [22, 156]},
-                {"delay": 2, "stations": [142]},
-                {"delay": 6, "stations": [142, 202]},
-                {"delay": 3, "stations": [196, 281]},
-                {"delay": 0, "line": 3, "stations": [121, 183]},
-                {"delay": 4, "line": 11, "stations": [31]},
-                {"delay": 9, "line": 5, "stations": [143, 203]},
-                {"delay": 4, "line": 10, "stations": [12, 271]},
-                {"delay": 4, "line": 9, "stations": [88, 269]},
-                {"delay": 0, "stations": [17, 183]},
-                {"delay": 2, "line": 3, "stations": [43, 160]},
-                {"delay": 3, "line": 2, "stations": [98, 230]},
-                {"delay": 5, "line": 11, "stations": [41]},
-                {"delay": 5, "line": 1, "stations": [23, 155]},
-                {"delay": 8, "line": 8, "stations": [30, 295]},
-                {"delay": 3, "line": 7, "stations": [28, 83]},
-                {"delay": 9, "line": 3, "stations": [163]},
-                {"delay": 8, "line": 9, "stations": [219, 253]},
-                {"delay": 2, "stations": [264]},
-                {"delay": 3, "stations": [158]},
-                {"delay": 3, "stations": [56, 184]},
-                {"delay": 0, "stations": [243, 247]},
-                {"delay": 0, "line": 2, "stations": [165]},
-                {"delay": 9, "line": 10, "stations": [12, 271]},
-                {"delay": 8, "line": 10, "stations": [12, 271]},
-                {"delay": 5, "line": 2, "stations": [89, 144]},
-            ],
-        ),
-        (
-            "2024-12-31",
-            [
-                {"delay": 9, "line": 5, "stations": [141, 289]},
-                {"delay": 7, "line": 1, "stations": [286]},
-                {"delay": 7, "line": 2, "stations": [43, 160]},
-                {"delay": 5, "line": 3, "stations": [236]},
-                {"delay": 3, "line": 8, "stations": [116]},
-                {"delay": 2, "line": 7, "stations": [166]},
-                {"delay": 0, "line": 9, "stations": [94, 219]},
-                {"delay": 0, "line": 3, "stations": [2, 287]},
-                {"delay": 2, "line": 9, "stations": [219, 253]},
-                {"delay": 6, "line": 1, "stations": [204]},
-                {"delay": 2, "line": 8, "stations": [129, 130]},
-                {"delay": 5, "line": 8, "stations": [130, 186]},
-                {"delay": 1, "line": 8, "stations": [73, 98]},
-                {"delay": 5, "line": 11, "stations": [62, 214]},
-                {"delay": 4, "stations": [81, 189]},
-                {"delay": 0, "stations": [43, 165]},
-                {"delay": 5, "line": 9, "stations": [122, 144]},
-                {"delay": 0, "line": 3, "stations": [16, 285]},
-                {"delay": 1, "line": 7, "stations": [101, 269]},
-                {"delay": 9, "line": 4, "stations": [82, 189]},
-                {"delay": 4, "line": 6, "stations": [74, 206]},
-                {"delay": 7, "line": 2, "stations": [103]},
-                {"delay": 5, "line": 8, "stations": [217]},
-                {"delay": 0, "line": 8, "stations": [38, 144]},
-                {"delay": 4, "stations": [142, 158]},
-                {"delay": 0, "line": 7, "stations": [55]},
-            ],
-        ),
-    ],
-)
-def test_disruption_info_with_date(date, info_list):
-    disruptions = disruption_info(date)
-    assert isinstance(disruptions, list), "Disruption info should be a list."
-    assert disruptions == info_list
+        ):
+            disruptions = disruption_info("2023-01-01")
+            assert isinstance(disruptions, list), "Disruption info should be a list."
+            assert disruptions == simple_disruption
 
 
 # Test the apply_disruptions function.
@@ -347,9 +250,7 @@ network_C = Network(5, [[2, 1, 10, 2]])
     ],
 )
 def test_get_entire_network(line_info, line_net_list, entire_network):
-    with mock.patch(
-        "londontube.query.query.check_http_connection", return_value=True
-    ) as mock_connection:
+    with mock.patch("londontube.query.query.check_http_connection", return_value=True):
         with mock.patch(
             "requests.get",
             side_effect=[
