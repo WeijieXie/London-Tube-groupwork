@@ -12,7 +12,7 @@ def sample_edges_expected():
         (0, 1): [(10, 0)],
         (0, 2): [(40, 1)],
         (1, 2): [(20, 0), (50, 2)],
-        (1, 3): [(30, 1)]
+        (1, 3): [(30, 2)]
     }
 
 
@@ -60,7 +60,7 @@ class TestInit:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(20, 0), (50, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -76,7 +76,7 @@ class TestInit:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(10, 0), (50, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
         ]
@@ -174,7 +174,7 @@ class TestInit:
                 [
                     [(1, 0, 10, 0), (1, 2, 20, 0)],
                     [(0, 2, 40, 1), (1, 2, 50, 2)],
-                    [(1, 3, 30, 1)]
+                    [(1, 3, 30, 2)]
                 ],
                 None,
                 None
@@ -272,7 +272,7 @@ class TestDisruptions:
                     (0, 1): [(20, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(40, 0), (50, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -290,7 +290,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(50, 2), (60, 0)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -325,8 +325,8 @@ class TestDisruptions:
         "disruptions_info, matrix_expected, edges_expected",
         [
             (
-                # Line 1 between stations 1&3, delay 2 -> time increased
-                (2, 1, 3, 1),
+                # Line 2 between stations 1&3, delay 2 -> time increased
+                (2, 1, 3, 2),
                 np.array(
                     [
                         [0, 10, 40, 0],
@@ -339,7 +339,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(20, 0), (50, 2)],
-                    (1, 3): [(60, 1)]
+                    (1, 3): [(60, 2)]
                 }
             ),
             (
@@ -357,12 +357,12 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(50, 2), (60, 0)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
                 # Line 1 between stations 1&2 by 1 -> nothing happens
-                (1, 2, 1, 3),
+                (1, 2, 1, 1),
                 None,
                 None
             ),
@@ -406,7 +406,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(20, 0), (50, 2)],
-                    (1, 3): [(60, 1)]
+                    (1, 3): [(60, 2)]
                 }
             ),
 
@@ -425,7 +425,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(120, 1)],
                     (1, 2): [(60, 0), (150, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -443,7 +443,7 @@ class TestDisruptions:
                     (0, 1): [(30, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(60, 0), (150, 2)],
-                    (1, 3): [(90, 1)]
+                    (1, 3): [(90, 2)]
                 }
             ),
         ],
@@ -478,7 +478,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(20, 0), (50, 2)],
-                    (1, 3): [(60, 1)]
+                    (1, 3): [(60, 2)]
                 }
             ),
             (
@@ -496,7 +496,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(60, 0), (150, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -553,7 +553,7 @@ class TestDisruptions:
                 {
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -570,7 +570,7 @@ class TestDisruptions:
                 {
                     (0, 1): [(10, 0)],
                     (1, 2): [(20, 0), (50, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
             (
@@ -588,7 +588,7 @@ class TestDisruptions:
                     (0, 1): [(10, 0)],
                     (0, 2): [(40, 1)],
                     (1, 2): [(50, 2)],
-                    (1, 3): [(30, 1)]
+                    (1, 3): [(30, 2)]
                 }
             ),
         ],
@@ -601,16 +601,6 @@ class TestDisruptions:
         for key, value in sample_network.edges.items():
             assert value == edges_expected.get(key, []), f"key {key}"
 
-        ),
-    ],
-)
-def test_delay_to_closure(sample_network, disruptions_info, network_expected):
-    sample_network.delay_to_closure(disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
 
 
 class TestGraph:
