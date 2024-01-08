@@ -84,6 +84,13 @@ class Network:
                 (edge[2], edge[3])
             )
 
+        # This dictionary is used to record all edges
+        # We always use x < y in the key which allows easy assigning to matrix values
+        self.th_edges = {key: [] for key in [((x, y)) for y in range(n_stations) for x in range(y)]}
+
+        for edge in edges:
+            self.add_edge(edge)
+
     @property
     def n_nodes(self) -> int:
         """
@@ -174,6 +181,50 @@ class Network:
                 integrated_network.edges_record[edge_key] = time_and_lineid
 
         return integrated_network
+
+    def add_edge(self, edge):
+        """
+        Adds an edge to the dict edges:
+            - if an edge with the same line and stations already exists
+                - it is replaced if the new edge is faster
+                - the edge is not added otherwise
+            - keeping the first edge in the stations list as the fastest
+            - simply adding the edge if there are no edges yet between the stations
+
+        Parameters
+        ----------
+        edge: tuple(int, int, int, int)
+            A standard edge consisting of (station1, station2, weight, line)
+        """
+        # Ensure x < y
+        pair = tuple(set(edge[:2]))
+        value = edge[2:]
+        all_lines = self.th_edges[pair]
+
+        # If the new edge is 0, there is nothing to do
+        if edge[2] == 0:
+            return
+
+        for i, edge_line in enumerate(all_lines):
+            # If the line exists..
+            if edge_line[1] == edge[3]:
+                # If the new edge is faster..
+                if edge[2] < edge_line[0]:
+                    # Delete the existing edge
+                    all_lines.pop(i)
+                    break
+
+                # Return if we reach here, since the new edge is slower
+                return
+
+        # Insert the edge into position 0 and update the matrix if it's the new fastest
+        if all_lines == [] or edge[2] < all_lines[0][0]:
+            all_lines.insert(0, value)
+
+            self.matrix[pair] = edge[2]
+            self.matrix[pair[::-1]] = edge[2]
+        else:
+            all_lines.append(value)
 
     # The first disruption type
     def delay_to_specific_line_one_station(
