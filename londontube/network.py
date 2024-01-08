@@ -226,6 +226,70 @@ class Network:
         else:
             all_lines.append(value)
 
+    def apply_delay(
+        self, delay, station_idx, other_station_idx=None, line_idx=None
+    ):
+        """
+        Apply delay to multiplying the weight of all edges connected to the station.
+        If other_station_idx is provided, the delay is only applied to edges between the two station.
+        If line_idx is provided, the delay is only applied to edges with that line.
+
+        Parameters
+        ----------
+        delay : int
+            The travel time(weight) is multiplied by this factor
+        station_idx : int
+            The index of the affect station
+        other_station_idx : int, optional
+            The index of the other station (default is None)
+        line_idx : int, optional
+            The index of the delayed line (default is None)
+
+        Raises
+        ------
+        ValueError
+            If station_idx == other_station_idx
+        """
+        if station_idx == other_station_idx:
+            raise ValueError("Parameters station_idx and other_station_idx cannot be the same")
+
+        # Assemble station_pairs to apply delay to - (station, other_station) or all others if no other provided
+        station_pairs = [tuple(set((station_idx, other)))
+                         for other in range(self.n_nodes)
+                         if other_station_idx in [None, other] and station_idx != other]
+
+        for pair in station_pairs:
+            # Continue if no edges
+            if self.th_edges[pair] == []:
+                continue
+
+            # Update weights of edges on the line, or all edges if no line provided
+            self.th_edges[pair] = [(weight * delay if line_idx in [None, line] else weight, line)
+                                   for weight, line in self.th_edges[pair]]
+
+            # Remove edges with weight 0
+            self.th_edges[pair] = [edge for edge in self.th_edges[pair] if edge[0] != 0]
+
+            # If no edges remain, set the matrix points to 0 and continue
+            if self.th_edges[pair] == []:
+                self.matrix[pair] = 0
+                self.matrix[pair[::-1]] = 0
+                continue
+
+            # Move the fastest to the front
+            fastest = []
+            for i, edge in enumerate(self.th_edges[pair]):
+                # If new fastest and non-zero then move to front
+                if not fastest or edge[0] < fastest[0]:
+                    print(edge)
+                    fastest = [edge[0], i]
+
+            self.th_edges[pair].insert(0, self.th_edges[pair].pop(fastest[1]))
+
+            # Assign to the matrix
+            self.matrix[pair] = self.th_edges[pair][0][0]
+            self.matrix[pair[::-1]] = self.th_edges[pair][0][0]
+
     # The first disruption type
     def delay_to_specific_line_one_station(
         self, line_idx, station_idx, delay_multiplier
