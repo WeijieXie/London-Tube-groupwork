@@ -1,8 +1,9 @@
+""" Module handling creation and manipulation of Network class """
 from typing import List
-import numpy as np
 import math
 from queue import Queue
 import heapq
+import numpy as np
 
 
 class Network:
@@ -14,25 +15,62 @@ class Network:
     matrix : list[list[int]]
         Adjacency matrix of the network.
 
-    edge: list[tuple()]
+    edges: list[tuple(int, int, int, int)]
         Each edge information in a network is stored as a tuple in a list.
-        The content of a tuple is (edge[0], edge[1], w, id) where station1 and station2 are two stations,
-        w is the weight(travel time) between them and id is what line this edge belongs to.
+        The content of a tuple is (station1, station2, weight, line) where:
+            station1&2 - stations the edge represents travel between
+            w - the weight, in this case travel time of the journey
+            line - the line the journey belongs to
 
-    edges_record : dict[tuple[int, int], list[tuple(int, int)]
+    edges_record : dict[tuple(int, int), list[tuple(int, int)]
         Dictionary where:
             - Keys are tuples representing (station1, station2) pairs.
             - Values are lists of tuples representing (travel time, line_id) pairs.
     """
 
-    def __init__(self, n_stations, list_of_edges):
+    def __init__(self, n_stations, edges):
+        """
+        Constructor for Network class.
+
+        Params
+        ------
+        n_stations : int
+            Number of stations for the Network.
+
+        edges: list[tuple(int, int, int, int)] or list[list[int, int, int, int]]
+            edge information provided as (station1, station2, weight, line) where:
+                station1&2 - stations the edge represents travel between
+                w - the weight, in this case travel time of the journey
+                line - the line the journey belongs to
+
+        Raises
+        ------
+        TypeError
+            If the types of the params are not correct
+        """
+        # Type checks on inputs
+        if any([not isinstance(n_stations, int), isinstance(n_stations, bool)]):
+            raise TypeError("Parameter n_stations must be of type int")
+        if not all(all(isinstance(value, int) and not isinstance(value, bool) for value in edge) for edge in edges):
+            raise TypeError("Edge parameters must be of type int")
+        if not all(len(edge) == 4 for edge in edges):
+            raise TypeError("Edges must have 4 parameters")
+
+        # Check no edge weights are negative
+        if not all(edge[2] >= 0 for edge in edges):
+            raise ValueError("Edges must have non-negative weights")
+
+        # Check the edge stations are between 0 and n_stations
+        if not all(0 <= station < n_stations for edge in edges for station in edge[:2]):
+            raise ValueError("Edge stations must satisfy 0 <= station < n_stations")
+
         # The adjacency matrix
         self.matrix = np.zeros((n_stations, n_stations), dtype=int)
         # List of edges
         self.edges = []
         # This dictionary is used to record all edges
         self.edges_record = {}
-        for edge in list_of_edges:
+        for edge in edges:
             self.edges.append(
                 (edge[0], edge[1], edge[2], edge[3])
             )  # edge[3] is the identifier of a line
@@ -83,7 +121,14 @@ class Network:
         -------
         Network
             Combined Network.
+
+        Raises
+        ------
+        Value Error
+            If the Networks are of different sizes
         """
+        if self.n_nodes != other.n_nodes:
+            raise ValueError(f"Networks cannot be combined with n_nodes {self.n_nodes} and {other.n_nodes}")
 
         # Combined network
 
@@ -437,7 +482,8 @@ class Network:
         This method uses the well-known Breadth-First Search (BFS) to find nth-order neighbors in the network.
 
         A queue is used to 'visit' first the initial node, then its neighbours and their neighbors, and so on iteratively,
-        until all n-th order neighbor nodes have been found. Visited nodes are tracked to not double back through the network.
+        until all n-th order neighbor nodes have been found.
+        Visited nodes are tracked to not double back through the network.
 
         This method stops when all n-distant neighbor nodes have been found, to save computation time.
         """
@@ -462,7 +508,7 @@ class Network:
         """
         Find the shortest path between the start and destination nodes using Dijkstra's algorithm.
 
-        This method calculates the shortest path in terms of travel time between the specified start and destination nodes in the network.
+        This method calculates the shortest path in terms of travel time between the specified start and destination nodes.
         It uses Dijkstra's algorithm, which is an algorithm for finding the shortest paths between nodes in a graph.
 
         Parameters
@@ -475,13 +521,14 @@ class Network:
         Returns
         -------
         path : list of int
-            The shortest path from the start node to the destination node as a list of node indices. Returns `None` if no path is found.
+            The shortest path from the start node to the destination node as a list of node indices.
+            Returns `None` if no path is found.
         total_cost : float
             The total travel time of the shortest path. Returns `None` if no path is found.
 
         Notes
         -----
-        The algorithm works by first initializing the distance to all nodes as infinity, except for the start node, which is set to 0.
+        The algorithm works by first initializing the distance to all nodes as infinity, except the start which is set to 0.
         It then iteratively relaxes the distances to the nodes by considering all unvisited neighbors of the current node.
         The process continues until all nodes are visited or the destination node's shortest path is determined.
 
@@ -535,11 +582,11 @@ class Network:
 
         if tentative_costs[end_node] == math.inf:
             return None, None  # Indicates that no path was found
-        else:
-            return (
-                self.construct_path(predecessor, start_node, end_node),
-                tentative_costs[end_node],
-            )
+
+        return (
+            self.construct_path(predecessor, start_node, end_node),
+            tentative_costs[end_node],
+        )
 
     def construct_path(self, predecessor, start_node, end_node):
         """
@@ -587,5 +634,5 @@ class Network:
 
         if path_list[0] == start_node:
             return path_list
-        else:
-            return []
+
+        return []
