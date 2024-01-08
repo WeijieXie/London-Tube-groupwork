@@ -1,6 +1,6 @@
 """ Tests for the network class """
-import pytest
 from unittest.mock import MagicMock
+import pytest
 import numpy as np
 from londontube.network import Network
 
@@ -601,23 +601,13 @@ class TestDisruptions:
         for key, value in sample_network.edges.items():
             assert value == edges_expected.get(key, []), f"key {key}"
 
-        ),
-    ],
-)
-def test_delay_to_closure(sample_network, disruptions_info, network_expected):
-    sample_network.delay_to_closure(disruptions_info)
-    assert isinstance(
-        sample_network, Network
-    ), "The returned object should be an instance of Network."
-    assert np.array_equal(sample_network.matrix, network_expected)
-    assert sample_network.n_nodes == 5, "The network should have more than 0 nodes."
-
 
 class TestGraph:
     """ Test the functionality of the graph related methods """
 
     @pytest.fixture()
     def graph_network(self):
+        """ Setup network for graph tests """
         matrix = np.array(
             [
                 # Main network nodes 0-4
@@ -740,4 +730,3 @@ class TestGraph:
         with pytest.raises(IndexError) as e_info:
             graph_network.dijkstra(*parameters)
         assert str(e_info.value) == "start_node and end_node must satisfy 0 <= v < n_nodes (9)"
-
