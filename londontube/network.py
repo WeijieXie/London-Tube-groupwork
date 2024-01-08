@@ -308,7 +308,7 @@ class Network:
         ...     [0, 0, 0, 0, 0, 0, 0, 0, 0],
         ... ])
         >>> network.matrix = matrix
-        >>> network.n_nodes = 9
+     
 
         # Test for 1-distant neighbors
         >>> network.distant_neighbours(1, 0)
