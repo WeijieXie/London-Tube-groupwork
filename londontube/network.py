@@ -238,7 +238,7 @@ class Network:
         Parameters
         ----------
         n : int
-            N-distant parameter.
+            N-distant parameter, must be greater than 0.
         v : int
             Index of a node.
 
@@ -246,6 +246,13 @@ class Network:
         -------
         neighbours : list of int
             List of indexes of nodes that are n-distant neighbours.
+
+        Raises
+        ------
+        IndexError
+            if v does not satisfy 0 <= v < n_nodes
+        ValueError
+            if n <= 0
 
         Notes
         -------
@@ -257,6 +264,14 @@ class Network:
 
         This method stops when all n-distant neighbor nodes have been found, to save computation time.
         """
+        # Check v in range
+        if not 0 <= v < self.n_nodes:
+            raise IndexError(f"v must satisfy 0 <= v < n_nodes ({self.n_nodes})")
+
+        # Check n > 0
+        if n <= 0:
+            raise ValueError("n must be > 0")
+
         visited = [0 for _ in range(self.matrix.shape[0])]
         visited[v] = 1
         visiting_queue = Queue()
@@ -296,6 +311,11 @@ class Network:
         total_cost : float
             The total travel time of the shortest path. Returns `None` if no path is found.
 
+        Raises
+        ------
+        IndexError
+            if start_node or end_node does not satisfy 0 <= v < n_nodes
+
         Notes
         -----
         The algorithm works by first initializing the distance to all nodes as infinity, except the start which is set to 0.
@@ -315,6 +335,8 @@ class Network:
         >>> network.dijkstra(0, 3)
         ([0, 1, 3], 7)
         """
+        if not all(0 <= node < self.n_nodes for node in [start_node, end_node]):
+            raise IndexError(f"start_node and end_node must satisfy 0 <= v < n_nodes ({self.n_nodes})")
 
         nodes_num = self.n_nodes  # number of nodes
         visited_list = [False] * nodes_num
