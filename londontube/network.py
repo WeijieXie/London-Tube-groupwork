@@ -213,10 +213,7 @@ class Network:
         Examples
         --------
         
-        >>> network = Network(4, [(0, 1, 3, 0),
-                                  (1, 2, 3, 0),
-                                  (1, 3, 4, 0),
-                                  (2, 3, 5, 0)])
+        >>> network = Network(4, [(0, 1, 3, 0),(1, 2, 3, 0),(1, 3, 4, 0),(2, 3, 5, 0)])
         >>> network.apply_delay(3,0)
         >>> network.adjacency_matrix
         array([[0, 9, 0, 0],
