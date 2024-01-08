@@ -18,5 +18,24 @@ Key Features
 
 Usage Examples
 --------------
-[Provide a few basic examples of how to use the Network class.]
 
+Instantiate a network
+
+.. code-block:: python
+
+    >>> edges = [(0, 1, 10, 0), (0, 2, 30, 1), (1, 4, 20, 2)]
+    >>> network = Network(5, edges)
+
+Find the 2-distance neighbours of station 0
+
+.. code-block:: python
+
+    >>> network.distant_neighbours(2, 0)
+    [1, 2, 4]
+
+Find the shortest path between stations 0 and 4
+
+.. code-block:: python
+
+    >>> network.dijkstra(0, 4)
+    ([0, 1, 4], 30)
