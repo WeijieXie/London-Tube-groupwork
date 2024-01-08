@@ -82,7 +82,7 @@ def disruption_info(date=None):
     if date is None:
         query_web = "https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query"
     else:
-        query_web = "https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query?date={date}"
+        query_web = f"https://rse-with-python.arc.ucl.ac.uk/londontube-service/disruptions/query?date={date}"
 
     response = requests.get(query_web, timeout=120)
     disruption_info = response.json()

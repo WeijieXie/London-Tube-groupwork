@@ -139,7 +139,7 @@ class Network:
             A standard edge consisting of (station1, station2, weight, line)
         """
         # Ensure x < y
-        pair = tuple(set(edge[:2]))
+        pair = tuple(sorted(edge[:2]))
         value = edge[2:]
         all_lines = self.edges[pair]
 
@@ -196,7 +196,7 @@ class Network:
             raise ValueError("Parameters station_idx and other_station_idx cannot be the same")
 
         # Assemble station_pairs to apply delay to - (station, other_station) or all others if no other provided
-        station_pairs = [tuple(set((station_idx, other)))
+        station_pairs = [tuple(sorted((station_idx, other)))
                          for other in range(self.n_nodes)
                          if other_station_idx in [None, other] and station_idx != other]
 
@@ -223,7 +223,6 @@ class Network:
             for i, edge in enumerate(self.edges[pair]):
                 # If new fastest and non-zero then move to front
                 if not fastest or edge[0] < fastest[0]:
-                    print(edge)
                     fastest = [edge[0], i]
 
             self.edges[pair].insert(0, self.edges[pair].pop(fastest[1]))
