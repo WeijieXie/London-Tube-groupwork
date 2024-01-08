@@ -40,6 +40,14 @@ class Network:
         ------
         TypeError
             If the types of the params are not correct
+            
+        Examples
+        --------
+        >>> network = Network(4, [(0, 1, 5, 1), (1, 2, 3, 1), (2, 3, 4, 2)])
+        >>> network.matrix.tolist()
+        [[0, 5, 0, 0], [5, 0, 3, 0], [0, 3, 0, 4], [0, 0, 4, 0]]
+        >>> sorted(network.edges.items())
+        [((0, 1), [(5, 1)]), ((0, 2), []), ((0, 3), []), ((1, 2), [(3, 1)]), ((1, 3), []), ((2, 3), [(4, 2)])]
         """
         # Type checks on inputs
         if any([not isinstance(n_stations, int), isinstance(n_stations, bool)]):
@@ -137,6 +145,16 @@ class Network:
         ----------
         edge: tuple(int, int, int, int)
             A standard edge consisting of (station1, station2, weight, line)
+
+        Examples
+        --------
+        >>> network = Network(3, [])
+        >>> network.add_edge((0, 1, 10, 1))
+        >>> network.edges
+        {(0, 1): [(10, 1)], (0, 2): [], (1, 2): []}
+        >>> network.add_edge((1, 2, 5, 2))
+        >>> network.edges
+        {(0, 1): [(10, 1)], (0, 2): [], (1, 2): [(5, 2)]}
         """
         # Ensure x < y
         pair = tuple(sorted(edge[:2]))
@@ -269,7 +287,7 @@ class Network:
             if n <= 0
 
         Notes
-        -------
+        -----
         This method uses the well-known Breadth-First Search (BFS) to find nth-order neighbors in the network.
 
         A queue is used to 'visit' first the initial node, then its neighbours and their neighbors, and so on iteratively,
@@ -277,6 +295,53 @@ class Network:
         Visited nodes are tracked to not double back through the network.
 
         This method stops when all n-distant neighbor nodes have been found, to save computation time.
+
+        Examples
+        --------
+        >>> network = Network(9, [])
+        >>> matrix = np.array([
+        ...     [0, 1, 0, 0, 0, 0, 0, 0, 0],
+        ...     [1, 0, 2, 0, 4, 0, 0, 0, 0],
+        ...     [0, 2, 0, 8, 0, 0, 0, 0, 0],
+        ...     [0, 0, 8, 0, 1, 0, 0, 0, 0],
+        ...     [0, 4, 0, 1, 0, 0, 0, 0, 0],
+        ...     [0, 0, 0, 0, 0, 0, 5, 9, 0],
+        ...     [0, 0, 0, 0, 0, 5, 0, 2, 0],
+        ...     [0, 0, 0, 0, 0, 9, 2, 0, 0],
+        ...     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ... ])
+        >>> network.matrix = matrix
+        >>> network.n_nodes = 9
+
+        # Test for 1-distant neighbors
+        >>> network.distant_neighbours(1, 0)
+        [1]
+        >>> network.distant_neighbours(1, 1)
+        [0, 2, 4]
+
+        # Test for 2-distant neighbors
+        >>> network.distant_neighbours(2, 0)
+        [1, 2, 4]
+
+        # Test for nodes with no neighbors
+        >>> network.distant_neighbours(1, 8)
+        []
+
+        # Test for isolated sub-network
+        >>> network.distant_neighbours(1, 5)
+        [6, 7]
+
+        # Error handling: n <= 0
+        >>> network.distant_neighbours(-1, 0)
+        Traceback (most recent call last):
+            ...
+        ValueError: n must be > 0
+
+        # Error handling: v out of range
+        >>> network.distant_neighbours(1, 10)
+        Traceback (most recent call last):
+            ...
+        IndexError: v must satisfy 0 <= v < n_nodes (9)
         """
         # Check v in range
         if not 0 <= v < self.n_nodes:
@@ -338,16 +403,13 @@ class Network:
 
         Examples
         --------
-        >>> n_stations = 4
-        >>> list_of_edge = [(0, 1, 3),
-                            (1, 2, 3),
-                            (1, 3, 4),
-                            (2, 3, 5)]
-        >>> network = Network(n_stations, list_of_edge)
-        >>> network.dijkstra(0, 2)
-        ([0, 1, 2], 5)
+        >>> network = Network(4, [(0, 1, 1, 1), (1, 2, 2, 1), (2, 3, 3, 1)])
         >>> network.dijkstra(0, 3)
-        ([0, 1, 3], 7)
+        ([0, 1, 2, 3], 6)
+        >>> network.dijkstra(1, 3)
+        ([1, 2, 3], 5)
+        >>> network.dijkstra(0, 2)
+        ([0, 1, 2], 3)
         """
         if not all(0 <= node < self.n_nodes for node in [start_node, end_node]):
             raise IndexError(f"start_node and end_node must satisfy 0 <= v < n_nodes ({self.n_nodes})")
@@ -417,15 +479,6 @@ class Network:
         This method is used as a helper for Dijkstra's algorithm.
         It backtracks from the destination node using the `predecessor` array to construct the shortest path.
 
-        Examples
-        --------
-        >>> predecessor = [None, 0, 1, 5, 1, 2]
-        >>> construct_path(predecessor, 0, 3)
-        [0, 1, 2, 5, 3]
-
-        >>> predecessor = [None, 0, 0]
-        >>> construct_path(predecessor, 0, 4)
-        [0, 4]
         """
         path_list = []
         added_note = end_node  # Locate the predecessor of the added_note

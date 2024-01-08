@@ -18,16 +18,3 @@ The package consists of three main components:
    network
    query
    command
-
-Installation
-------------
-Refer to the User Guide in the main documentation for detailed installation instructions.
-
-Usage
------
-The package can be used to plan journeys, analyze network connectivity, and handle disruptions in the network. See the User Guide for example workflows.
-
-Development
------------
-For information on contributing to londontube, testing, and coding style, refer to the Developer Guide in the main documentation.
-
