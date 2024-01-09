@@ -7,6 +7,7 @@ from londontube.query.query import (
 )
 from datetime import datetime
 import matplotlib.pyplot as plt
+from londontube.network import Network
 
 
 def convert_to_station_index(station):
