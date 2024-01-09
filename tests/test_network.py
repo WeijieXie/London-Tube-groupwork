@@ -677,7 +677,7 @@ class TestGraph:
     )
     def test_construct_path_positive(self, graph_network, parameters, path_expected):
         """ Test positivee cases for construct_path """
-        path = Network.construct_path(graph_network,*parameters)
+        path = Network.construct_path(*parameters)
         assert path == path_expected
 
     @pytest.mark.parametrize(
@@ -696,7 +696,7 @@ class TestGraph:
         _, cost = Network.dijkstra(graph_network,*parameters)
 
         assert cost == cost_expected
-        Network.construct_path.assert_called_once_with(graph_network,predecessor_expected, *parameters)
+        Network.construct_path.assert_called_once_with(predecessor_expected, *parameters)
 
     @pytest.mark.parametrize(
         "parameters",
