@@ -51,7 +51,7 @@ def main():
     end_node = convert_to_station_index(destination)
 
     network = network_of_given_day(arguments.setoff_date)
-    path, travel_time = network.dijkstra(start_node, end_node)
+    path, travel_time = Network.dijkstra(network, start_node, end_node)
     path_name = convert_indices_to_names(path)
 
     # TODO: Add desired path output format
