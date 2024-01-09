@@ -40,7 +40,7 @@ class Network:
         ------
         TypeError
             If the types of the params are not correct
-            
+
         Examples
         --------
         >>> network = Network(4, [(0, 1, 5, 1), (1, 2, 3, 1), (2, 3, 4, 2)])
@@ -52,7 +52,12 @@ class Network:
         # Type checks on inputs
         if any([not isinstance(n_stations, int), isinstance(n_stations, bool)]):
             raise TypeError("Parameter n_stations must be of type int")
-        if not all(all(isinstance(value, int) and not isinstance(value, bool) for value in edge) for edge in edges):
+        if not all(
+            all(
+                isinstance(value, int) and not isinstance(value, bool) for value in edge
+            )
+            for edge in edges
+        ):
             raise TypeError("Edge parameters must be of type int")
         if not all(len(edge) == 4 for edge in edges):
             raise TypeError("Edges must have 4 parameters")
@@ -70,12 +75,14 @@ class Network:
 
         # This dictionary is used to record all edges
         # We always use x < y in the key which allows easy assigning to matrix values
-        self.edges = {key: [] for key in [((x, y)) for y in range(n_stations) for x in range(y)]}
+        self.edges = {
+            key: [] for key in [((x, y)) for y in range(n_stations) for x in range(y)]
+        }
 
         for edge in edges:
             self.add_edge(edge)
 
-    @ property
+    @property
     def n_nodes(self) -> int:
         """
         Return the number of nodes in the network.
@@ -119,7 +126,9 @@ class Network:
             If the Networks are of different sizes
         """
         if self.n_nodes != other.n_nodes:
-            raise ValueError(f"Networks cannot be combined with n_nodes {self.n_nodes} and {other.n_nodes}")
+            raise ValueError(
+                f"Networks cannot be combined with n_nodes {self.n_nodes} and {other.n_nodes}"
+            )
 
         # Combined network
         integrated_network = Network(self.n_nodes, [])
@@ -186,9 +195,7 @@ class Network:
         else:
             all_lines.append(value)
 
-    def apply_delay(
-        self, delay, station_idx, other_station_idx=None, line_idx=None
-    ):
+    def apply_delay(self, delay, station_idx, other_station_idx=None, line_idx=None):
         """
         Apply delay to multiplying the weight of all edges connected to the station.
         If other_station_idx is provided, the delay is only applied to edges between the two station.
@@ -222,12 +229,16 @@ class Network:
                [0, 4, 5, 0]])
         """
         if station_idx == other_station_idx:
-            raise ValueError("Parameters station_idx and other_station_idx cannot be the same")
+            raise ValueError(
+                "Parameters station_idx and other_station_idx cannot be the same"
+            )
 
         # Assemble station_pairs to apply delay to - (station, other_station) or all others if no other provided
-        station_pairs = [tuple(sorted((station_idx, other)))
-                         for other in range(self.n_nodes)
-                         if other_station_idx in [None, other] and station_idx != other]
+        station_pairs = [
+            tuple(sorted((station_idx, other)))
+            for other in range(self.n_nodes)
+            if other_station_idx in [None, other] and station_idx != other
+        ]
 
         for pair in station_pairs:
             # Continue if no edges
@@ -235,8 +246,10 @@ class Network:
                 continue
 
             # Update weights of edges on the line, or all edges if no line provided
-            self.edges[pair] = [(weight * delay if line_idx in [None, line] else weight, line)
-                                for weight, line in self.edges[pair]]
+            self.edges[pair] = [
+                (weight * delay if line_idx in [None, line] else weight, line)
+                for weight, line in self.edges[pair]
+            ]
 
             # Remove edges with weight 0
             self.edges[pair] = [edge for edge in self.edges[pair] if edge[0] != 0]
@@ -365,7 +378,8 @@ class Network:
                     visiting_queue.put((i, depth + 1))
         return sorted(neighbours)
 
-    def dijkstra(self, start_node, end_node):
+    @classmethod
+    def dijkstra(cls, network, start_node, end_node):
         """
         Find the shortest path between the start and destination nodes using Dijkstra's algorithm.
 
@@ -408,10 +422,12 @@ class Network:
         >>> Network.dijkstra(network, 0, 2)
         ([0, 1, 2], 3)
         """
-        if not all(0 <= node < self.n_nodes for node in [start_node, end_node]):
-            raise IndexError(f"start_node and end_node must satisfy 0 <= v < n_nodes ({self.n_nodes})")
+        if not all(0 <= node < network.n_nodes for node in [start_node, end_node]):
+            raise IndexError(
+                f"start_node and end_node must satisfy 0 <= v < n_nodes ({network.n_nodes})"
+            )
 
-        nodes_num = self.n_nodes  # number of nodes
+        nodes_num = network.n_nodes  # number of nodes
         visited_list = [False] * nodes_num
         # Set the tentative cost
         tentative_costs = [math.inf] * nodes_num
@@ -435,7 +451,7 @@ class Network:
                 break
 
             # Check the connected nodes of the popped node
-            for connected_node, travel_cost in enumerate(self.matrix[pop_node]):
+            for connected_node, travel_cost in enumerate(network.matrix[pop_node]):
                 # Make sure there is a connection
                 if travel_cost > 0 and not visited_list[connected_node]:
                     sum_cost = smallest_cost + travel_cost
@@ -449,11 +465,12 @@ class Network:
             return None, None  # Indicates that no path was found
 
         return (
-            self.construct_path(predecessor, start_node, end_node),
+            cls.construct_path(predecessor, start_node, end_node),
             tentative_costs[end_node],
         )
 
-    def construct_path(self, predecessor, start_node, end_node):
+    @classmethod
+    def construct_path(cls, predecessor, start_node, end_node):
         """
         Construct the shortest path from the start node to the destination node.
 
