@@ -53,6 +53,9 @@ def main():
 
     network = network_of_given_day(arguments.setoff_date)
     path, travel_time = Network.dijkstra(network, start_node, end_node)
+    if path == None:
+        print(f"There is no journey from {start} to {destination}")
+        return
     path_name = convert_indices_to_names(path)
 
     # TODO: Add desired path output format
