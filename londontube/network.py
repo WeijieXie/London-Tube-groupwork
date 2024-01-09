@@ -311,31 +311,31 @@ class Network:
      
 
         # Test for 1-distant neighbors
-        >>> network.distant_neighbours(1, 0)
+        >>> Network.distant_neighbours(network, 1, 0)
         [1]
-        >>> network.distant_neighbours(1, 1)
+        >>> Network.distant_neighbours(network, 1, 1)
         [0, 2, 4]
 
         # Test for 2-distant neighbors
-        >>> network.distant_neighbours(2, 0)
+        >>> Network.distant_neighbours(network, 2, 0)
         [1, 2, 4]
 
         # Test for nodes with no neighbors
-        >>> network.distant_neighbours(1, 8)
+        >>> Network.distant_neighbours(network, 1, 8)
         []
 
         # Test for isolated sub-network
-        >>> network.distant_neighbours(1, 5)
+        >>> Network.distant_neighbours(network, 1, 5)
         [6, 7]
 
         # Error handling: n <= 0
-        >>> network.distant_neighbours(-1, 0)
+        >>> Network.distant_neighbours(network, -1, 0)
         Traceback (most recent call last):
             ...
         ValueError: n must be > 0
 
         # Error handling: v out of range
-        >>> network.distant_neighbours(1, 10)
+        >>> Network.distant_neighbours(network, 1, 10)
         Traceback (most recent call last):
             ...
         IndexError: v must satisfy 0 <= v < n_nodes (9)
@@ -401,11 +401,11 @@ class Network:
         Examples
         --------
         >>> network = Network(4, [(0, 1, 1, 1), (1, 2, 2, 1), (2, 3, 3, 1)])
-        >>> network.dijkstra(0, 3)
+        >>> Network.dijkstra(network, 0, 3)
         ([0, 1, 2, 3], 6)
-        >>> network.dijkstra(1, 3)
+        >>> Network.dijkstra(network, 1, 3)
         ([1, 2, 3], 5)
-        >>> network.dijkstra(0, 2)
+        >>> Network.dijkstra(network, 0, 2)
         ([0, 1, 2], 3)
         """
         if not all(0 <= node < self.n_nodes for node in [start_node, end_node]):
