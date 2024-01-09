@@ -273,7 +273,8 @@ class Network:
             self.matrix[pair] = self.edges[pair][0][0]
             self.matrix[pair[::-1]] = self.edges[pair][0][0]
 
-    def distant_neighbours(self, n, v) -> List[int]:
+    @classmethod
+    def distant_neighbours(cls, network, n, v) -> List[int]:
         """
         Find the n-distant neighbours of a particular node.
 
@@ -354,14 +355,14 @@ class Network:
         IndexError: v must satisfy 0 <= v < n_nodes (9)
         """
         # Check v in range
-        if not 0 <= v < self.n_nodes:
-            raise IndexError(f"v must satisfy 0 <= v < n_nodes ({self.n_nodes})")
+        if not 0 <= v < network.n_nodes:
+            raise IndexError(f"v must satisfy 0 <= v < n_nodes ({network.n_nodes})")
 
         # Check n > 0
         if n <= 0:
             raise ValueError("n must be > 0")
 
-        visited = [0 for _ in range(self.matrix.shape[0])]
+        visited = [0 for _ in range(network.matrix.shape[0])]
         visited[v] = 1
         visiting_queue = Queue()
         visiting_queue.put((v, 0))
@@ -372,8 +373,8 @@ class Network:
                 return neighbours
             if depth > 0:
                 neighbours.append(current_node)
-            for i in range(self.matrix.shape[0]):
-                if self.matrix[current_node, i] != 0 and not visited[i]:
+            for i in range(network.matrix.shape[0]):
+                if network.matrix[current_node, i] != 0 and not visited[i]:
                     visited[i] = 1
                     visiting_queue.put((i, depth + 1))
         return sorted(neighbours)
