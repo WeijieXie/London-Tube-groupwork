@@ -644,22 +644,22 @@ class TestGraph:
     )
     def test_distant_neighbours_positive(self, graph_network, n, v, result_expected):
         """ Test positive cases for distant neighbours """
-        results = graph_network.distant_neighbours(n, v)
+        results = Network.distant_neighbours(graph_network,n, v)
         assert set(results) == set(result_expected)
         assert len(results) == len(result_expected)
 
     def test_distant_neighbours_errors(self, graph_network):
         """ Check that distant neighbours raises the appropriate errors """
         with pytest.raises(ValueError) as e_info:
-            graph_network.distant_neighbours(-1, 0)
+            Network.distant_neighbours(graph_network,-1, 0)
         assert str(e_info.value) == "n must be > 0"
 
         with pytest.raises(IndexError) as e_info:
-            graph_network.distant_neighbours(1, 10)
+            Network.distant_neighbours(graph_network,1, 10)
         assert str(e_info.value) == "v must satisfy 0 <= v < n_nodes (9)"
 
         with pytest.raises(IndexError) as e_info:
-            graph_network.distant_neighbours(1, -1)
+            Network.distant_neighbours(graph_network,1, -1)
         assert str(e_info.value) == "v must satisfy 0 <= v < n_nodes (9)"
 
     @pytest.mark.parametrize(
@@ -677,7 +677,7 @@ class TestGraph:
     )
     def test_construct_path_positive(self, graph_network, parameters, path_expected):
         """ Test positivee cases for construct_path """
-        path = graph_network.construct_path(*parameters)
+        path = Network.construct_path(graph_network,*parameters)
         assert path == path_expected
 
     @pytest.mark.parametrize(
@@ -692,11 +692,11 @@ class TestGraph:
     )
     def test_dijkstra_positive(self, graph_network, parameters, cost_expected, predecessor_expected):
         """ Test dijkstra correctly returns cost and assembles predecessor array """
-        graph_network.construct_path = MagicMock()
-        _, cost = graph_network.dijkstra(*parameters)
+        Network.construct_path = MagicMock()
+        _, cost = Network.dijkstra(graph_network,*parameters)
 
         assert cost == cost_expected
-        graph_network.construct_path.assert_called_once_with(predecessor_expected, *parameters)
+        Network.construct_path.assert_called_once_with(graph_network,predecessor_expected, *parameters)
 
     @pytest.mark.parametrize(
         "parameters",
@@ -710,8 +710,8 @@ class TestGraph:
     )
     def test_dijkstra_no_path(self, graph_network, parameters):
         """ Test dijkstra returns none, none when no path """
-        graph_network.construct_path = MagicMock()
-        path, cost = graph_network.dijkstra(*parameters)
+        Network.construct_path = MagicMock()
+        path, cost = Network.dijkstra(graph_network,*parameters)
 
         assert path is None
         assert cost is None
@@ -728,5 +728,5 @@ class TestGraph:
     def test_dijkstra_index_error(self, graph_network, parameters):
         """ Assert correct cases for distant neighbours """
         with pytest.raises(IndexError) as e_info:
-            graph_network.dijkstra(*parameters)
+            Network.dijkstra(graph_network,*parameters)
         assert str(e_info.value) == "start_node and end_node must satisfy 0 <= v < n_nodes (9)"
